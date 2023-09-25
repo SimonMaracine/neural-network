@@ -22,7 +22,7 @@ namespace neuron {
     using InputFunction = std::function<Real(const Real*, const Real*, std::size_t)>;
 
     template<typename Real>
-    using ActivationFunction = std::function<Real(Real, Real)>;  // FIXME two functions have three parameters
+    using ActivationFunction = std::function<Real(Real)>;
 
     template<typename Real>
     using OutputFunction = std::function<Real(Real)>;
@@ -110,7 +110,7 @@ namespace neuron {
         }
 
         template<typename Real>
-        Real ramp(Real x, Real theta, Real a) {
+        Real ramp(Real x, Real a) {
             if (x < -a) {
                 return static_cast<Real>(-1.0);
             } else if (x > a) {

@@ -5,14 +5,23 @@
 #include "neuron.hpp"
 
 struct NnApplication : public gui_base::GuiApplication {
+    NnApplication()
+        : gui_base::GuiApplication(1024, 576, "Neural Network") {}
+
     virtual void start() override;
     virtual void update() override;
     virtual void dispose() override;
 
+    void constants_control();
+    void functions_control();
+    void activation_function_plot();
+
+    void update_activation_function();
+
     neuron::Neuron<float> neuron;
 
     neuron::InputFunction<float> input_function = neuron::input_function::sum<float>;
-    neuron::ActivationFunction<float> activation_function = neuron::activation_function::heaviside<float>;
+    neuron::ActivationFunction<float> activation_function;
     neuron::OutputFunction<float> output_function = neuron::output_function::identity<float>;
 
     struct {
@@ -20,4 +29,6 @@ struct NnApplication : public gui_base::GuiApplication {
         float g = 1.0f;
         float a = 1.0f;
     } constants;
+
+    int activation_function_current = 0;
 };
