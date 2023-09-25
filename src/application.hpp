@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 #include <gui_base/gui_base.hpp>
 
 #include "neuron.hpp"
@@ -14,9 +16,11 @@ struct NnApplication : public gui_base::GuiApplication {
 
     void constants_control();
     void functions_control();
+    void inputs_control();
     void activation_function_plot();
 
     void update_activation_function();
+    void reallocate_inputs(std::size_t new_size, std::size_t old_size);
 
     neuron::Neuron<float> neuron;
 
@@ -31,4 +35,6 @@ struct NnApplication : public gui_base::GuiApplication {
     } constants;
 
     int activation_function_current = 0;
+    float* inputs = nullptr;
+    std::size_t number_of_inputs = 0;
 };

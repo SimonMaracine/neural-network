@@ -6,6 +6,7 @@
 #include <limits>
 #include <cmath>
 #include <numbers>
+#include <cstring>
 
 /*
     It is assumed that Real is a IEEE-754 floating point type, which means that comparisons
@@ -14,11 +15,6 @@
 
 namespace neuron {
     template<typename Real>
-    struct Neuron {
-
-    };
-
-    template<typename Real>
     using InputFunction = std::function<Real(const Real*, const Real*, std::size_t)>;
 
     template<typename Real>
@@ -26,6 +22,58 @@ namespace neuron {
 
     template<typename Real>
     using OutputFunction = std::function<Real(Real)>;
+
+    template<typename Real>
+    class Neuron {
+    public:
+        Neuron() = default;
+        ~Neuron() = default;
+        Neuron(const Neuron&) = delete;
+        Neuron& operator=(const Neuron&) = delete;
+        Neuron(Neuron&&) = delete;
+        Neuron& operator=(Neuron&&) = delete;
+
+        void setup_functions(InputFunction<Real> input, ActivationFunction<Real> activation, OutputFunction<Real> output) {
+            input_function = input;
+            activation_function = activation;
+            output_function = output;
+        }
+
+        void setup_inputs(std::size_t n) {
+            if (n == 0) {
+                delete[] weights;
+                weights = nullptr;
+                this->n = n;
+            }
+
+            Real* new_weights = new Real[n];
+
+            if (this->n > 0) {
+                std::memcpy(new_weights, weights, this->n * sizeof(Real));
+            }
+
+            delete[] weights;
+            weights = new_weights;
+            this->n = n;
+        }
+
+        Real* get_weights() {
+            return weights;
+        }
+
+        Real process(const Real* inputs) {
+            const Real global_input = input_function(inputs, weights, n);
+            const Real activation = activation_function(global_input);
+            return output_function(activation);
+        }
+    private:
+        Real* weights = nullptr;
+        std::size_t n = 0;
+
+        InputFunction<Real> input_function;
+        ActivationFunction<Real> activation_function;
+        OutputFunction<Real> output_function;
+    };
 
     namespace input_function {
         template<typename Real>
