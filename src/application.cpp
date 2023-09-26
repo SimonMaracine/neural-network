@@ -8,14 +8,18 @@
 
 void NnApplication::start() {
     update_activation_function();
+    neuron.set_input_function(input_function);
+    neuron.set_activation_function(activation_function);
+    neuron.set_output_function(output_function);
 }
 
 void NnApplication::update() {
-    ImGui::ShowDemoWindow();
+    // ImGui::ShowDemoWindow();
 
     constants_control();
     functions_control();
-    inputs_control();
+    neuron_inputs_control();
+    neuron_output();
 }
 
 void NnApplication::dispose() {
@@ -54,6 +58,7 @@ void NnApplication::functions_control() {
 
             if (ImGui::Combo("Input Function", &item_current, items, 4)) {
                 input_function = values[item_current];
+                neuron.set_input_function(input_function);
             }
         }
 
@@ -71,6 +76,7 @@ void NnApplication::functions_control() {
 
             if (ImGui::Combo("Activation Function", &activation_function_current, items, 5)) {
                 activation_function = values[activation_function_current];
+                neuron.set_activation_function(activation_function);
             }
         }
 
@@ -85,6 +91,7 @@ void NnApplication::functions_control() {
 
             if (ImGui::Combo("Output Function", &item_current, items, 3)) {
                 output_function = values[item_current];
+                neuron.set_output_function(output_function);
             }
         }
 
@@ -92,7 +99,7 @@ void NnApplication::functions_control() {
     }
 }
 
-void NnApplication::inputs_control() {
+void NnApplication::neuron_inputs_control() {
     if (ImGui::Begin("Neuron Inputs Control")) {
         ImGui::Text("Number of inputs: %lu", number_of_inputs);
 
@@ -125,17 +132,31 @@ void NnApplication::inputs_control() {
         for (std::size_t i = 0; i < number_of_inputs; i++) {
             ImGui::PushID(i);
 
-            ImGui::Text("X%lu", i);
+            ImGui::Text("x%lu", i);
             ImGui::SameLine();
             ImGui::DragFloat("##x", inputs + i, 0.1f, -50.0f, 50.0f);
 
-            ImGui::Text("W%lu", i);
+            ImGui::Text("w%lu", i);
             ImGui::SameLine();
             ImGui::DragFloat("##w", neuron.get_weights() + i, 0.1f, -50.0f, 50.0f);
 
             ImGui::Spacing();
 
             ImGui::PopID();
+        }
+
+        ImGui::End();
+    }
+}
+
+void NnApplication::neuron_output() {
+    if (ImGui::Begin("Neuron Output")) {
+        if (neuron.is_valid()) {
+            const float result = neuron.process(inputs);
+
+            ImGui::Text("Output %f", result);
+        } else {
+            ImGui::Text("Neuron is invalid.");
         }
 
         ImGui::End();

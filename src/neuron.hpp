@@ -33,12 +33,6 @@ namespace neuron {
         Neuron(Neuron&&) = delete;
         Neuron& operator=(Neuron&&) = delete;
 
-        void setup_functions(InputFunction<Real> input, ActivationFunction<Real> activation, OutputFunction<Real> output) {
-            input_function = input;
-            activation_function = activation;
-            output_function = output;
-        }
-
         void setup_inputs(std::size_t n) {
             if (n == 0) {
                 delete[] weights;
@@ -57,8 +51,24 @@ namespace neuron {
             this->n = n;
         }
 
-        Real* get_weights() {
+        Real* get_weights() const {
             return weights;
+        }
+
+        void set_input_function(InputFunction<Real> input_function) {
+            this->input_function = input_function;
+        }
+
+        void set_activation_function(ActivationFunction<Real> activation_function) {
+            this->activation_function = activation_function;
+        }
+
+        void set_output_function(OutputFunction<Real> output_function) {
+            this->output_function = output_function;
+        }
+
+        bool is_valid() const {
+            return n > 0 && input_function && activation_function && output_function;
         }
 
         Real process(const Real* inputs) {

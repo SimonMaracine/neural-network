@@ -16,7 +16,8 @@ struct NnApplication : public gui_base::GuiApplication {
 
     void constants_control();
     void functions_control();
-    void inputs_control();
+    void neuron_inputs_control();
+    void neuron_output();
     void activation_function_plot();
 
     void update_activation_function();
@@ -35,6 +36,7 @@ struct NnApplication : public gui_base::GuiApplication {
     } constants;
 
     int activation_function_current = 0;
+
     float* inputs = nullptr;
     std::size_t number_of_inputs = 0;
 };
