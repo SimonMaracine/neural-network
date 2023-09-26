@@ -30,14 +30,17 @@ void NnApplication::constants_control() {
     if (ImGui::Begin("Constants Control")) {
         if (ImGui::DragFloat("theta", &constants.theta, 0.1f, -100.0f, 100.0f)) {
             update_activation_function();
+            neuron.set_activation_function(activation_function);
         }
 
         if (ImGui::DragFloat("g", &constants.g, 0.1f, -100.0f, 100.0f)) {
             update_activation_function();
+            neuron.set_activation_function(activation_function);
         }
 
         if (ImGui::DragFloat("a", &constants.a, 0.1f, -100.0f, 100.0f)) {
             update_activation_function();
+            neuron.set_activation_function(activation_function);
         }
 
         ImGui::End();
