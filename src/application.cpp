@@ -1,16 +1,16 @@
 #include <cstddef>
 #include <functional>
 #include <cstring>
+#include <type_traits>
 
 #include <gui_base/gui_base.hpp>
 
 #include "application.hpp"
 
 void NnApplication::start() {
-    update_activation_function();
-    neuron.set_input_function(input_function);
-    neuron.set_activation_function(activation_function);
-    neuron.set_output_function(output_function);
+    neuron.set_input_function(neuron::input_function::sum<Float>);
+    neuron.set_activation_function(get_activation_function());
+    neuron.set_output_function(neuron::output_function::identity<Float>);
 }
 
 void NnApplication::update() {
@@ -27,20 +27,21 @@ void NnApplication::dispose() {
 }
 
 void NnApplication::constants_control() {
+    static constexpr auto TYPE = std::is_same_v<Float, float> ? ImGuiDataType_Float : ImGuiDataType_Double;
+    constexpr Float MIN = static_cast<Float>(-100.0);
+    constexpr Float MAX = static_cast<Float>(100.0);
+
     if (ImGui::Begin("Constants Control")) {
-        if (ImGui::DragFloat("theta", &constants.theta, 0.1f, -100.0f, 100.0f)) {
-            update_activation_function();
-            neuron.set_activation_function(activation_function);
+        if (ImGui::DragScalar("theta", TYPE, &constants.theta, 0.1f, &MIN, &MAX)) {
+            neuron.set_activation_function(get_activation_function());
         }
 
-        if (ImGui::DragFloat("g", &constants.g, 0.1f, -100.0f, 100.0f)) {
-            update_activation_function();
-            neuron.set_activation_function(activation_function);
+        if (ImGui::DragScalar("g", TYPE, &constants.g, 0.1f, &MIN, &MAX)) {
+            neuron.set_activation_function(get_activation_function());
         }
 
-        if (ImGui::DragFloat("a", &constants.a, 0.1f, -100.0f, 100.0f)) {
-            update_activation_function();
-            neuron.set_activation_function(activation_function);
+        if (ImGui::DragScalar("a", TYPE, &constants.a, 0.1f, &MIN, &MAX)) {
+            neuron.set_activation_function(get_activation_function());
         }
 
         ImGui::End();
@@ -52,16 +53,15 @@ void NnApplication::functions_control() {
         {
             const char* items[] = { "sum", "product", "max", "min" };
             static int item_current = 0;
-            const neuron::InputFunction<float> values[] = {
-                neuron::input_function::sum<float>,
-                neuron::input_function::product<float>,
-                neuron::input_function::max<float>,
-                neuron::input_function::min<float>
+            const neuron::InputFunction<Float> values[] = {
+                neuron::input_function::sum<Float>,
+                neuron::input_function::product<Float>,
+                neuron::input_function::max<Float>,
+                neuron::input_function::min<Float>
             };
 
             if (ImGui::Combo("Input Function", &item_current, items, 4)) {
-                input_function = values[item_current];
-                neuron.set_input_function(input_function);
+                neuron.set_input_function(values[item_current]);
             }
         }
 
@@ -69,32 +69,30 @@ void NnApplication::functions_control() {
             using namespace std::placeholders;
 
             const char* items[] = { "heaviside", "sigmoid", "signum", "tanh", "ramp" };
-            const neuron::ActivationFunction<float> values[] = {
-                std::bind(neuron::activation_function::heaviside<float>, _1, constants.theta),
-                std::bind(neuron::activation_function::sigmoid<float>, _1, constants.theta, constants.g),
-                std::bind(neuron::activation_function::signum<float>, _1, constants.theta),
-                std::bind(neuron::activation_function::tanh<float>, _1, constants.theta, constants.g),
-                std::bind(neuron::activation_function::ramp<float>, _1, constants.a)
+            const neuron::ActivationFunction<Float> values[] = {
+                std::bind(neuron::activation_function::heaviside<Float>, _1, constants.theta),
+                std::bind(neuron::activation_function::sigmoid<Float>, _1, constants.theta, constants.g),
+                std::bind(neuron::activation_function::signum<Float>, _1, constants.theta),
+                std::bind(neuron::activation_function::tanh<Float>, _1, constants.theta, constants.g),
+                std::bind(neuron::activation_function::ramp<Float>, _1, constants.a)
             };
 
             if (ImGui::Combo("Activation Function", &activation_function_current, items, 5)) {
-                activation_function = values[activation_function_current];
-                neuron.set_activation_function(activation_function);
+                neuron.set_activation_function(values[activation_function_current]);
             }
         }
 
         {
             const char* items[] = { "identity", "clamp_binary", "clamp_binary2" };
             static int item_current = 0;
-            const neuron::OutputFunction<float> values[] = {
-                neuron::output_function::identity<float>,
-                neuron::output_function::clamp_binary<float>,
-                neuron::output_function::clamp_binary2<float>
+            const neuron::OutputFunction<Float> values[] = {
+                neuron::output_function::identity<Float>,
+                neuron::output_function::clamp_binary<Float>,
+                neuron::output_function::clamp_binary2<Float>
             };
 
             if (ImGui::Combo("Output Function", &item_current, items, 3)) {
-                output_function = values[item_current];
-                neuron.set_output_function(output_function);
+                neuron.set_output_function(values[item_current]);
             }
         }
 
@@ -132,16 +130,20 @@ void NnApplication::neuron_inputs_control() {
             ImGui::Text("There must be at least one input.");
         }
 
+        static constexpr auto TYPE = std::is_same_v<Float, float> ? ImGuiDataType_Float : ImGuiDataType_Double;
+        constexpr Float MIN = static_cast<Float>(-50.0);
+        constexpr Float MAX = static_cast<Float>(50.0);
+
         for (std::size_t i = 0; i < number_of_inputs; i++) {
             ImGui::PushID(i);
 
             ImGui::Text("x%lu", i);
             ImGui::SameLine();
-            ImGui::DragFloat("##x", inputs + i, 0.1f, -50.0f, 50.0f);
+            ImGui::DragScalar("##x", TYPE, inputs + i, 0.1f, &MIN, &MAX);
 
             ImGui::Text("w%lu", i);
             ImGui::SameLine();
-            ImGui::DragFloat("##w", neuron.get_weights() + i, 0.1f, -50.0f, 50.0f);
+            ImGui::DragScalar("##w", TYPE, neuron.get_weights() + i, 0.1f, &MIN, &MAX);
 
             ImGui::Spacing();
 
@@ -154,12 +156,30 @@ void NnApplication::neuron_inputs_control() {
 
 void NnApplication::neuron_output() {
     if (ImGui::Begin("Neuron Output")) {
-        if (neuron.is_valid()) {
-            const float result = neuron.process(inputs);
+        static bool intermediary_steps = false;
+        ImGui::Checkbox("Show intermediary steps", &intermediary_steps);
 
-            ImGui::Text("Output %f", result);
+        ImGui::Separator();
+
+        if (intermediary_steps) {
+            if (neuron.is_valid()) {
+                Float global_input, activation, output;
+                neuron.process_in_steps(inputs, global_input, activation, output);
+
+                ImGui::Text("Global input:  %f", global_input);
+                ImGui::Text("Activation:  %f", activation);
+                ImGui::Text("Output:  %f", output);
+            } else {
+                ImGui::Text("Neuron is invalid.");
+            }
         } else {
-            ImGui::Text("Neuron is invalid.");
+            if (neuron.is_valid()) {
+                const Float output = neuron.process(inputs);
+
+                ImGui::Text("Output:  %f", output);
+            } else {
+                ImGui::Text("Neuron is invalid.");
+            }
         }
 
         ImGui::End();
@@ -167,31 +187,21 @@ void NnApplication::neuron_output() {
 }
 
 void NnApplication::activation_function_plot() {
-    auto function = [](void* self, int i) {
-        NnApplication* app = static_cast<NnApplication*>(self);
 
-        return app->activation_function(static_cast<float>(i) * 0.1f);
-    };
-
-    if (ImGui::Begin("Activation Function")) {
-        ImGui::PlotLines("Lines", function, this, 128, -64, nullptr, -1.0f, 2.0f, ImVec2(0, 100));
-
-        ImGui::End();
-    }
 }
 
-void NnApplication::update_activation_function() {
+neuron::ActivationFunction<NnApplication::Float> NnApplication::get_activation_function() {
     using namespace std::placeholders;
 
-    const neuron::ActivationFunction<float> functions[] = {
-        std::bind(neuron::activation_function::heaviside<float>, _1, constants.theta),
-        std::bind(neuron::activation_function::sigmoid<float>, _1, constants.theta, constants.g),
-        std::bind(neuron::activation_function::signum<float>, _1, constants.theta),
-        std::bind(neuron::activation_function::tanh<float>, _1, constants.theta, constants.g),
-        std::bind(neuron::activation_function::ramp<float>, _1, constants.a)
+    const neuron::ActivationFunction<Float> functions[] = {
+        std::bind(neuron::activation_function::heaviside<Float>, _1, constants.theta),
+        std::bind(neuron::activation_function::sigmoid<Float>, _1, constants.theta, constants.g),
+        std::bind(neuron::activation_function::signum<Float>, _1, constants.theta),
+        std::bind(neuron::activation_function::tanh<Float>, _1, constants.theta, constants.g),
+        std::bind(neuron::activation_function::ramp<Float>, _1, constants.a)
     };
 
-    activation_function = functions[activation_function_current];
+    return functions[activation_function_current];
 }
 
 void NnApplication::reallocate_inputs(std::size_t new_size, std::size_t old_size) {
@@ -202,10 +212,10 @@ void NnApplication::reallocate_inputs(std::size_t new_size, std::size_t old_size
         return;
     }
 
-    float* new_inputs = new float[new_size];
+    Float* new_inputs = new Float[new_size];
 
     if (old_size > 0) {
-        std::memcpy(new_inputs, inputs, old_size * sizeof(float));
+        std::memcpy(new_inputs, inputs, old_size * sizeof(Float));
     }
 
     delete[] inputs;

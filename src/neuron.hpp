@@ -76,6 +76,12 @@ namespace neuron {
             const Real activation = activation_function(global_input);
             return output_function(activation);
         }
+
+        void process_in_steps(const Real* inputs, Real& global_input, Real& activation, Real& output) {
+            global_input = input_function(inputs, weights, n);
+            activation = activation_function(global_input);
+            output = output_function(activation);
+        }
     private:
         Real* weights = nullptr;
         std::size_t n = 0;
@@ -196,7 +202,7 @@ namespace neuron {
 
         template<typename Real>
         Real clamp_binary2(Real x) {
-            if (x >= static_cast<Real>(0.5)) {
+            if (x >= static_cast<Real>(0.0)) {
                 return static_cast<Real>(1.0);
             } else {
                 return static_cast<Real>(-1.0);

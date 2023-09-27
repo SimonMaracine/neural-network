@@ -20,23 +20,21 @@ struct NnApplication : public gui_base::GuiApplication {
     void neuron_output();
     void activation_function_plot();
 
-    void update_activation_function();
+    using Float = double;
+
+    neuron::ActivationFunction<Float> get_activation_function();
     void reallocate_inputs(std::size_t new_size, std::size_t old_size);
 
-    neuron::Neuron<float> neuron;
-
-    neuron::InputFunction<float> input_function = neuron::input_function::sum<float>;
-    neuron::ActivationFunction<float> activation_function;
-    neuron::OutputFunction<float> output_function = neuron::output_function::identity<float>;
+    neuron::Neuron<Float> neuron;
 
     struct {
-        float theta = 0.0f;
-        float g = 1.0f;
-        float a = 1.0f;
+        Float theta = 0.0f;
+        Float g = 1.0f;
+        Float a = 1.0f;
     } constants;
 
     int activation_function_current = 0;
 
-    float* inputs = nullptr;
+    Float* inputs = nullptr;
     std::size_t number_of_inputs = 0;
 };
