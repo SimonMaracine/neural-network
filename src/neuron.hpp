@@ -43,7 +43,7 @@ namespace neuron {
             Real* new_weights = new Real[n];
 
             if (this->n > 0) {
-                std::memcpy(new_weights, weights, this->n * sizeof(Real));
+                std::memcpy(new_weights, weights, std::min(this->n, n) * sizeof(Real));
             }
 
             delete[] weights;

@@ -2,6 +2,7 @@
 #include <functional>
 #include <cstring>
 #include <type_traits>
+#include <algorithm>
 
 #include <gui_base/gui_base.hpp>
 
@@ -215,7 +216,7 @@ void NnApplication::reallocate_inputs(std::size_t new_size, std::size_t old_size
     Float* new_inputs = new Float[new_size];
 
     if (old_size > 0) {
-        std::memcpy(new_inputs, inputs, old_size * sizeof(Float));
+        std::memcpy(new_inputs, inputs, std::min(old_size, new_size) * sizeof(Float));
     }
 
     delete[] inputs;
