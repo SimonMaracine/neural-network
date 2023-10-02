@@ -150,8 +150,9 @@ namespace neuron {
         template<typename Real>
         Real sigmoid(Real x, Real theta, Real g) {
             static constexpr Real e = std::numbers::e_v<Real>;
+            static constexpr Real one = static_cast<Real>(1.0);
 
-            return static_cast<Real>(1.0) / std::pow<Real>(e, -g * (x - theta));
+            return one / (one + std::pow<Real>(e, -g * (x - theta)));
         }
 
         template<typename Real>
