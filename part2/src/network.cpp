@@ -51,7 +51,11 @@ namespace neuron {
     }
 
     void Network::setup(std::size_t input_neurons, std::size_t output_neurons, HiddenLayers&& hidden_layers) {
+        assert(input_neurons > 0);
+        assert(output_neurons > 0);
         assert(!hidden_layers.layers.empty());
+
+        clear();
 
         this->input_neurons = input_neurons;
         output_layer.neurons.resize(output_neurons);
@@ -63,6 +67,12 @@ namespace neuron {
 
             this->hidden_layers.push_back(std::move(layer));
         }
+    }
+
+    void Network::clear() {
+        input_neurons = 0;
+        output_layer.neurons.clear();
+        hidden_layers.clear();
     }
 
     namespace functions {

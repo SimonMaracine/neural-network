@@ -42,42 +42,27 @@ namespace neuron {
 
     class Network;
 
-    class Layer {
-    public:
+    struct Layer {
         void set_input_function(const InputFunction& input_function);
         void set_activation_function(const ActivationFunction::Function& activation_function);
         void set_output_function(const OutputFunction& output_function);
-    private:
+
         std::vector<Neuron> neurons;
 
         InputFunction input_function;
         ActivationFunction activation_function;
         OutputFunction output_function;
-
-        friend Network;
     };
 
-    class Network {
-    public:
+    struct Network {
         struct HiddenLayers {
             std::vector<std::size_t> layers;
         };
 
         void run(const double* inputs, const double* outputs);
         void setup(std::size_t input_neurons, std::size_t output_neurons, HiddenLayers&& hidden_layers);
+        void clear();
 
-        std::size_t inputs() const {
-            return input_neurons;
-        }
-
-        std::size_t outputs() const {
-            return output_layer.neurons.size();
-        }
-
-        Layer& hidden_layer(std::size_t index) {
-            return hidden_layers[index];
-        }
-    private:
         std::size_t input_neurons {};
         Layer output_layer;
         std::vector<Layer> hidden_layers;
