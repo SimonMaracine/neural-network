@@ -2,11 +2,9 @@
 #include <algorithm>
 #include <array>
 #include <utility>
+#include <cstdio>  // TODO remove
 
 #include "ui.hpp"
-
-    #include <iostream>
-
 
 namespace ui {
     struct Neuron {
@@ -99,17 +97,26 @@ namespace ui {
         build_output_layer(network, x, canvas.y, height, result);
     }
 
-    static void neuron_controls(neuron::Neuron* neuron) {
-        ImGui::Begin("Neuron Controls");
+    static void neuron_controls(neuron::Neuron* neuron, bool* neuron_window, bool& other_neuron_window) {
+        if (!*neuron_window) {
+            return;
+        }
 
-        for (std::size_t i = 0; i < neuron->n; i++) {
-            ImGui::PushID(i);
+        if (ImGui::Begin("Neuron Controls", neuron_window)) {
+            ImGui::Text("Weights");
+            ImGui::Spacing();
 
-            ImGui::InputDouble("##", neuron->weights + i, 0.01);
-            ImGui::SameLine();
-            ImGui::Text("%lu", i);
+            for (std::size_t i = 0; i < neuron->n; i++) {
+                ImGui::PushID(i);
 
-            ImGui::PopID();
+                ImGui::InputDouble("##", neuron->weights + i, 0.01);
+                ImGui::SameLine();
+                ImGui::Text("%lu", i);
+
+                ImGui::PopID();
+            }
+
+            other_neuron_window = !ImGui::IsWindowHovered();
         }
 
         ImGui::End();
@@ -117,52 +124,64 @@ namespace ui {
 
     void draw_network(const neuron::Network& network) {
         static neuron::Neuron* selected_neuron = nullptr;
+        static bool neuron_window = false;
+        static bool other_neuron_window = true;
 
         const ImGuiWindowFlags flags = selected_neuron != nullptr ? ImGuiWindowFlags_NoBringToFrontOnFocus : 0;
 
-        ImGui::Begin("Neural Network", nullptr, flags);
+        if (ImGui::Begin("Neural Network", nullptr, flags)) {
+            ImDrawList* list = ImGui::GetWindowDrawList();
+            const ImVec2 canvas = ImGui::GetCursorScreenPos();
+            const float OFFSET = 30.0f;
+            const float NEURON_SIZE = 20.0f;
+            static constexpr auto NEURON_COLOR = IM_COL32(200, 200, 200, 255);
+            static constexpr auto LINK_COLOR = IM_COL32(255, 255, 255, 255);
 
-        ImDrawList* list = ImGui::GetWindowDrawList();
-        const ImVec2 canvas = ImGui::GetCursorScreenPos();
-        const float OFFSET = 30.0f;
-        const float NEURON_SIZE = 20.0f;
-        static constexpr auto NEURON_COLOR = IM_COL32(200, 200, 200, 255);
-        static constexpr auto LINK_COLOR = IM_COL32(255, 255, 255, 255);
+            Network result;
+            build_network(network, canvas, OFFSET, result);
 
-        Network result;
-        build_network(network, canvas, OFFSET, result);
+            for (const auto& layer : result.layers) {
+                for (const Neuron& neuron : layer) {
+                    list->AddCircleFilled(neuron.position, NEURON_SIZE, NEURON_COLOR);
 
-        for (const auto& layer : result.layers) {
-            for (const Neuron& neuron : layer) {
-                list->AddCircleFilled(neuron.position, NEURON_SIZE, NEURON_COLOR);
+                    const auto upper_left = ImVec2(neuron.position.x - NEURON_SIZE, neuron.position.y - NEURON_SIZE);
+                    const auto lower_right = ImVec2(neuron.position.x + NEURON_SIZE, neuron.position.y + NEURON_SIZE);
 
-                const auto upper_left = ImVec2(neuron.position.x - NEURON_SIZE, neuron.position.y - NEURON_SIZE);
-                const auto lower_right = ImVec2(neuron.position.x + NEURON_SIZE, neuron.position.y + NEURON_SIZE);
+                    if (ImGui::IsMouseHoveringRect(upper_left, lower_right) && other_neuron_window) {
+                        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+                            if (neuron.neuron == nullptr) {
+                                // TODO input neuron
+                            } else {
+                                selected_neuron = neuron.neuron;
+                                neuron_window = true;
 
-                if (ImGui::IsMouseHoveringRect(upper_left, lower_right)) {
-                    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-                        selected_neuron = neuron.neuron;
+                                ImGui::SetNextWindowPos(neuron.position);
+                            }
+                        }
+                    }
+                }
+            }
 
-                        ImGui::SetNextWindowPos(neuron.position);
-                        ImGui::SetNextWindowFocus();
+            for (std::size_t i = 1; i < result.layers.size(); i++) {
+                for (const Neuron& neuron : result.layers[i]) {
+                    for (const Neuron& neuron2 : result.layers[i - 1]) {
+                        list->AddLine(neuron.position, neuron2.position, LINK_COLOR);
                     }
                 }
             }
         }
 
-        for (std::size_t i = 1; i < result.layers.size(); i++) {
-            for (const Neuron& neuron : result.layers[i]) {
-                for (const Neuron& neuron2 : result.layers[i - 1]) {
-                    list->AddLine(neuron.position, neuron2.position, LINK_COLOR);
-                }
-            }
-        }
+        ImGui::End();
 
         if (selected_neuron != nullptr) {
-            neuron_controls(selected_neuron);
-        }
+            ImGui::SetNextWindowFocus();
+            neuron_controls(selected_neuron, &neuron_window, other_neuron_window);
 
-        ImGui::End();
+            if (!neuron_window) {
+                selected_neuron = nullptr;
+                other_neuron_window = true;
+            }
+        }
     }
 
     void network_controls(neuron::Network& network) {
@@ -171,51 +190,54 @@ namespace ui {
         static int hidden_layers = 1;
         static std::array<int, 3> hidden_layer_neurons = { 3, 1, 1 };
 
-        ImGui::Begin("Network Controls");
+        if (ImGui::Begin("Network Controls")) {
+            ImGui::Text("Layers");
+            ImGui::Spacing();
 
-        if (ImGui::InputInt("Input Layer", &input_layer_neurons)) {
-            input_layer_neurons = std::max(input_layer_neurons, 1);
-        }
-
-        ImGui::Separator();
-
-        if (ImGui::InputInt("Hidden Layers", &hidden_layers)) {
-            hidden_layers = std::max(hidden_layers, 1);
-            hidden_layers = std::min(hidden_layers, 3);
-        }
-
-        ImGui::Spacing();
-
-        for (int i = 0; i < hidden_layers; i++) {
-            ImGui::PushID(i);
-
-            if (ImGui::InputInt("##", &hidden_layer_neurons[i])) {
-                hidden_layer_neurons[i] = std::max(hidden_layer_neurons[i], 1);
+            if (ImGui::InputInt("Input", &input_layer_neurons)) {
+                input_layer_neurons = std::max(input_layer_neurons, 1);
             }
 
-            ImGui::SameLine();
+            ImGui::Separator();
 
-            ImGui::Text("%d", i);
+            if (ImGui::InputInt("Hidden", &hidden_layers)) {
+                hidden_layers = std::max(hidden_layers, 1);
+                hidden_layers = std::min(hidden_layers, 3);
+            }
 
-            ImGui::PopID();
-        }
-
-        ImGui::Separator();
-
-        if (ImGui::InputInt("Output Layer", &output_layer_neurons)) {
-            output_layer_neurons = std::max(output_layer_neurons, 1);
-        }
-
-        ImGui::Separator();
-
-        if (ImGui::Button("Apply")) {
-            neuron::Network::HiddenLayers layers;
+            ImGui::Spacing();
 
             for (int i = 0; i < hidden_layers; i++) {
-                layers.layers.push_back(hidden_layer_neurons[i]);
+                ImGui::PushID(i);
+
+                if (ImGui::InputInt("##", &hidden_layer_neurons[i])) {
+                    hidden_layer_neurons[i] = std::max(hidden_layer_neurons[i], 1);
+                }
+
+                ImGui::SameLine();
+
+                ImGui::Text("%d", i);
+
+                ImGui::PopID();
             }
 
-            network.setup(input_layer_neurons, output_layer_neurons, std::move(layers));
+            ImGui::Separator();
+
+            if (ImGui::InputInt("Output", &output_layer_neurons)) {
+                output_layer_neurons = std::max(output_layer_neurons, 1);
+            }
+
+            ImGui::Separator();
+
+            if (ImGui::Button("Apply")) {
+                neuron::Network::HiddenLayers layers;
+
+                for (int i = 0; i < hidden_layers; i++) {
+                    layers.layers.push_back(hidden_layer_neurons[i]);
+                }
+
+                network.setup(input_layer_neurons, output_layer_neurons, std::move(layers));
+            }
         }
 
         ImGui::End();

@@ -6,6 +6,7 @@
 #include <functional>
 #include <utility>
 #include <cassert>
+#include <cstring>
 
 #include "network.hpp"
 
@@ -68,6 +69,7 @@ namespace neuron {
             this->hidden_layers.push_back(std::move(layer));
         }
 
+        // FIXME deallocate memory
         initialize_neurons();
     }
 
@@ -80,18 +82,20 @@ namespace neuron {
     void Network::initialize_neurons() {
         std::size_t current_inputs = input_neurons;
 
-        for (const Layer& layer : this->hidden_layers) {
-            for (Neuron neuron : layer.neurons) {
+        for (Layer& layer : hidden_layers) {
+            for (Neuron& neuron : layer.neurons) {
                 neuron.weights = new double[current_inputs];
                 neuron.n = current_inputs;
+                std::memset(neuron.weights, 0, current_inputs);
             }
 
             current_inputs = layer.neurons.size();
         }
 
-        for (Neuron neuron : output_layer.neurons) {
+        for (Neuron& neuron : output_layer.neurons) {
             neuron.weights = new double[current_inputs];
             neuron.n = current_inputs;
+            std::memset(neuron.weights, 0, current_inputs);
         }
     }
 
