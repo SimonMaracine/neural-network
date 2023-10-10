@@ -71,13 +71,13 @@ namespace neuron {
             return n > 0 && input_function && activation_function && output_function;
         }
 
-        Real process(const Real* inputs) {
+        Real process(const Real* inputs) const {
             const Real global_input = input_function(inputs, weights, n);
             const Real activation = activation_function(global_input);
             return output_function(activation);
         }
 
-        void process_in_steps(const Real* inputs, Real& global_input, Real& activation, Real& output) {
+        void process_in_steps(const Real* inputs, Real& global_input, Real& activation, Real& output) const {
             global_input = input_function(inputs, weights, n);
             activation = activation_function(global_input);
             output = output_function(activation);

@@ -72,27 +72,27 @@ void draw_network(const neuron::Network& network) {
 
     x = draw_hidden_layers(list, network, canvas.x + OFFSET + x, canvas.y + OFFSET, height, NEURON_SIZE, NEURON_COLOR);
 
-    draw_output_layer(list, network, canvas.x + OFFSET + x, canvas.y + OFFSET, height, NEURON_SIZE, NEURON_COLOR);
+    draw_output_layer(list, network, x, canvas.y + OFFSET, height, NEURON_SIZE, NEURON_COLOR);
 
     ImGui::End();
 }
 
 void network_controls(neuron::Network& network) {
-    static int input_layer_neurons = 0;
-    static int output_layer_neurons = 0;
-    static int hidden_layers = 0;
-    static std::array<int, 3> hidden_layer_neurons;
+    static int input_layer_neurons = 2;
+    static int output_layer_neurons = 1;
+    static int hidden_layers = 1;
+    static std::array<int, 3> hidden_layer_neurons = { 3, 1, 1 };
 
     ImGui::Begin("Network Controls");
 
     if (ImGui::InputInt("Input Layer", &input_layer_neurons)) {
-        input_layer_neurons = std::max(input_layer_neurons, 0);
+        input_layer_neurons = std::max(input_layer_neurons, 1);
     }
 
     ImGui::Separator();
 
     if (ImGui::InputInt("Hidden Layers", &hidden_layers)) {
-        hidden_layers = std::max(hidden_layers, 0);
+        hidden_layers = std::max(hidden_layers, 1);
         hidden_layers = std::min(hidden_layers, 3);
     }
 
@@ -100,12 +100,12 @@ void network_controls(neuron::Network& network) {
         ImGui::PushID(i);
 
         if (ImGui::InputInt("##", &hidden_layer_neurons[i])) {
-            hidden_layer_neurons[i] = std::max(hidden_layer_neurons[i], 0);
+            hidden_layer_neurons[i] = std::max(hidden_layer_neurons[i], 1);
         }
 
         ImGui::SameLine();
 
-        ImGui::Text("Hidden Layer %d", i);
+        ImGui::Text("%d", i);
 
         ImGui::PopID();
     }
@@ -113,7 +113,7 @@ void network_controls(neuron::Network& network) {
     ImGui::Separator();
 
     if (ImGui::InputInt("Output Layer", &output_layer_neurons)) {
-        output_layer_neurons = std::max(output_layer_neurons, 0);
+        output_layer_neurons = std::max(output_layer_neurons, 1);
     }
 
     ImGui::Separator();
