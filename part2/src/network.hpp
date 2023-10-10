@@ -37,7 +37,8 @@ namespace neuron {
     };
 
     struct Neuron {
-
+        double* weights = nullptr;
+        std::size_t n = 0;
     };
 
     class Network;
@@ -62,6 +63,8 @@ namespace neuron {
         void run(const double* inputs, const double* outputs);
         void setup(std::size_t input_neurons, std::size_t output_neurons, HiddenLayers&& hidden_layers);
         void clear();
+
+        void initialize_neurons();
 
         std::size_t input_neurons {};
         Layer output_layer;

@@ -19,12 +19,12 @@ void NnApplication::start() {
 void NnApplication::update() {
     ImGui::ShowDemoWindow();
 
-    network_controls(network);
+    ui::network_controls(network);
 
     // network.run();
 
 
-    draw_network(network);
+    ui::draw_network(network);
 }
 
 void NnApplication::dispose() {

@@ -4,5 +4,7 @@
 
 #include "network.hpp"
 
-void draw_network(const neuron::Network& network);
-void network_controls(neuron::Network& network);
+namespace ui {
+    void draw_network(const neuron::Network& network);
+    void network_controls(neuron::Network& network);
+}

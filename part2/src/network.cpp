@@ -67,12 +67,32 @@ namespace neuron {
 
             this->hidden_layers.push_back(std::move(layer));
         }
+
+        initialize_neurons();
     }
 
     void Network::clear() {
         input_neurons = 0;
         output_layer.neurons.clear();
         hidden_layers.clear();
+    }
+
+    void Network::initialize_neurons() {
+        std::size_t current_inputs = input_neurons;
+
+        for (const Layer& layer : this->hidden_layers) {
+            for (Neuron neuron : layer.neurons) {
+                neuron.weights = new double[current_inputs];
+                neuron.n = current_inputs;
+            }
+
+            current_inputs = layer.neurons.size();
+        }
+
+        for (Neuron neuron : output_layer.neurons) {
+            neuron.weights = new double[current_inputs];
+            neuron.n = current_inputs;
+        }
     }
 
     namespace functions {
