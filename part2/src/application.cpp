@@ -20,7 +20,9 @@ void NnApplication::start() {
 void NnApplication::update() {
     ImGui::ShowDemoWindow();
 
-    // network.run();
+    if (inputs != nullptr) {
+        network.run(inputs, nullptr);
+    }
 
     ui::build_network(network, &inputs, &n);
     ui::network_controls(network);

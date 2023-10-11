@@ -107,9 +107,9 @@ namespace ui {
             ImGui::Text("Values");
             ImGui::Spacing();
 
-            ImGui::Text("Input  %f", 0.0);
-            ImGui::Text("Activation  %f", 0.0);
-            ImGui::TextColored(LIGHT_RED, "Output  %f", 0.0);
+            ImGui::Text("Input  %f", neuron->result.global_input);
+            ImGui::Text("Activation  %f", neuron->result.activation);
+            ImGui::TextColored(LIGHT_RED, "Output  %f", neuron->result.output);
 
             ImGui::Spacing();
             ImGui::Separator();
@@ -254,7 +254,7 @@ namespace ui {
 
                 network.setup(input_layer_neurons, output_layer_neurons, std::move(layers));
 
-                // TODO deallocate first
+                delete[] *inputs;
                 *inputs = new double[input_layer_neurons];
                 *n = input_layer_neurons;
             }

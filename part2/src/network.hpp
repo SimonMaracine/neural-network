@@ -40,41 +40,6 @@ namespace neuron {
         Function function = sigmoid;
     };
 
-    struct Neuron {
-        double* weights = nullptr;
-        std::size_t n = 0;
-    };
-
-    class Network;
-
-    struct Layer {
-        void set_input_function(const InputFunction& input_function);
-        void set_activation_function(const ActivationFunction::Function& activation_function);
-        void set_output_function(const OutputFunction& output_function);
-
-        std::vector<Neuron> neurons;
-
-        InputFunction input_function;
-        ActivationFunction activation_function;
-        OutputFunction output_function;
-    };
-
-    struct Network {
-        struct HiddenLayers {
-            std::vector<std::size_t> layers;
-        };
-
-        void run(const double* inputs, const double* outputs);
-        void setup(std::size_t input_neurons, std::size_t output_neurons, HiddenLayers&& hidden_layers);
-        void clear();
-
-        void initialize_neurons();
-
-        std::size_t input_neurons {};
-        Layer output_layer;
-        std::vector<Layer> hidden_layers;
-    };
-
     namespace functions {
         double sum(const double* inputs, const double* weights, std::size_t size);
         double product(const double* inputs, const double* weights, std::size_t size);
@@ -91,4 +56,47 @@ namespace neuron {
         double binary(double x);
         double binary2(double x);
     }
+
+    struct Neuron {
+        double* weights = nullptr;
+        std::size_t n = 0;
+
+        struct {
+            double global_input = 0.0f;
+            double activation = 0.0f;
+            double output = 0.0f;
+        } result;
+    };
+
+    class Network;
+
+    struct Layer {
+        void set_input_function(const InputFunction& input_function);
+        void set_activation_function(const ActivationFunction::Function& activation_function);
+        void set_output_function(const OutputFunction& output_function);
+
+        std::vector<Neuron> neurons;
+
+        InputFunction input_function = functions::sum;
+        ActivationFunction activation_function = ActivationFunction(ActivationFunction::sigmoid);
+        OutputFunction output_function = functions::identity;
+    };
+
+    struct Network {
+        struct HiddenLayers {
+            std::vector<std::size_t> layers;
+        };
+
+        void run(const double* inputs, double* outputs);
+        void setup(std::size_t input_neurons, std::size_t output_neurons, HiddenLayers&& hidden_layers);
+        void clear();
+
+        void initialize_neurons();
+        void allocate_current_inputs(double** inputs, std::size_t* n, const std::vector<Neuron>& neurons);
+        void process_neuron(Neuron& neuron, const Layer& layer, const double* inputs, std::size_t n);
+
+        std::size_t input_neurons {};
+        Layer output_layer;
+        std::vector<Layer> hidden_layers;
+    };
 }
