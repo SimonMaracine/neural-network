@@ -11,24 +11,24 @@
 #include "network.hpp"
 
 namespace neuron {
-    double ActivationFunction::heaviside(double x) {
-        return functions::heaviside(x, theta);
+    double ActivationFunction::heaviside(const ActivationFunction* self, double x) {
+        return functions::heaviside(x, self->theta);
     }
 
-    double ActivationFunction::sigmoid(double x) {
-        return functions::sigmoid(x, theta, g);
+    double ActivationFunction::sigmoid(const ActivationFunction* self, double x) {
+        return functions::sigmoid(x, self->theta, self->g);
     }
 
-    double ActivationFunction::signum(double x) {
-        return functions::signum(x, theta);
+    double ActivationFunction::signum(const ActivationFunction* self, double x) {
+        return functions::signum(x, self->theta);
     }
 
-    double ActivationFunction::tanh(double x) {
-        return functions::tanh(x, theta, g);
+    double ActivationFunction::tanh(const ActivationFunction* self, double x) {
+        return functions::tanh(x, self->theta, self->g);
     }
 
-    double ActivationFunction::ramp(double x) {
-        return functions::ramp(x, a);
+    double ActivationFunction::ramp(const ActivationFunction* self, double x) {
+        return functions::ramp(x, self->a);
     }
 
     void Layer::set_input_function(const InputFunction& input_function) {
@@ -86,7 +86,7 @@ namespace neuron {
             for (Neuron& neuron : layer.neurons) {
                 neuron.weights = new double[current_inputs];
                 neuron.n = current_inputs;
-                std::memset(neuron.weights, 0, current_inputs);
+                std::memset(neuron.weights, 0, current_inputs);  // FIXME doesn't work sometimes
             }
 
             current_inputs = layer.neurons.size();
@@ -186,7 +186,7 @@ namespace neuron {
             return x;
         }
 
-        double clamp_binary(double x) {
+        double binary(double x) {
             if (x >= 0.5) {
                 return 1.0;
             } else {
@@ -194,7 +194,7 @@ namespace neuron {
             }
         }
 
-        double clamp_binary2(double x) {
+        double binary2(double x) {
             if (x >= 0.0) {
                 return 1.0;
             } else {

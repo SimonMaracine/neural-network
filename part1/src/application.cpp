@@ -44,9 +44,9 @@ void NnApplication::constants_control() {
         if (ImGui::DragScalar("a", TYPE, &constants.a, 0.1f, &MIN, &MAX)) {
             neuron.set_activation_function(get_activation_function());
         }
-
-        ImGui::End();
     }
+
+    ImGui::End();
 }
 
 void NnApplication::functions_control() {
@@ -96,9 +96,9 @@ void NnApplication::functions_control() {
                 neuron.set_output_function(values[item_current]);
             }
         }
-
-        ImGui::End();
     }
+
+    ImGui::End();
 }
 
 void NnApplication::neuron_inputs_control() {
@@ -150,9 +150,9 @@ void NnApplication::neuron_inputs_control() {
 
             ImGui::PopID();
         }
-
-        ImGui::End();
     }
+
+    ImGui::End();
 }
 
 void NnApplication::neuron_output() {
@@ -182,9 +182,9 @@ void NnApplication::neuron_output() {
                 ImGui::Text("Neuron is invalid.");
             }
         }
-
-        ImGui::End();
     }
+
+    ImGui::End();
 }
 
 void NnApplication::activation_function_plot() {

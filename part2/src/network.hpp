@@ -13,27 +13,31 @@ namespace neuron {
 
     class ActivationFunction {
     public:
-        using Function = std::function<double(double)>;
+        using Function = std::function<double(const ActivationFunction*, double)>;
+
+        ActivationFunction() = default;
+        ActivationFunction(const Function& function)
+            : function(function) {}
 
         double theta = 0.0f;
         double g = 1.0f;
         double a = 1.0f;
 
         double operator()(double x) const {
-            return function(x);
+            return function(this, x);
         }
 
         void set(const Function& function) {
             this->function = function;
         }
 
-        double heaviside(double x);
-        double sigmoid(double x);
-        double signum(double x);
-        double tanh(double x);
-        double ramp(double x);
+        static double heaviside(const ActivationFunction* self, double x);
+        static double sigmoid(const ActivationFunction* self, double x);
+        static double signum(const ActivationFunction* self, double x);
+        static double tanh(const ActivationFunction* self, double x);
+        static double ramp(const ActivationFunction* self, double x);
     private:
-        Function function;
+        Function function = sigmoid;
     };
 
     struct Neuron {
@@ -84,7 +88,7 @@ namespace neuron {
         double ramp(double x, double a);
 
         double identity(double x);
-        double clamp_binary(double x);
-        double clamp_binary2(double x);
+        double binary(double x);
+        double binary2(double x);
     }
 }
