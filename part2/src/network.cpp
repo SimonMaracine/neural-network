@@ -173,7 +173,7 @@ namespace neuron {
         }
 
         for (Neuron& neuron : output_layer.neurons) {
-            process_neuron(neuron, layer, current_inputs, current_n);
+            process_neuron(neuron, output_layer, current_inputs, current_n);
         }
 
         if (outputs != nullptr) {
