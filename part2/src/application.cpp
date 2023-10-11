@@ -1,4 +1,5 @@
 #include <utility>
+#include <cstddef>
 
 #include <gui_base/gui_base.hpp>
 
@@ -21,9 +22,10 @@ void NnApplication::update() {
 
     // network.run();
 
-    ui::build_network(network);
+    ui::build_network(network, &inputs, &n);
     ui::network_controls(network);
     ui::draw_network(network);
+    ui::inputs_controls(inputs, n);
 }
 
 void NnApplication::dispose() {

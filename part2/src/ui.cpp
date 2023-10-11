@@ -6,6 +6,8 @@
 #include "ui.hpp"
 
 namespace ui {
+    static constexpr auto LIGHT_RED = ImVec4(0.9f, 0.5f, 0.4f, 1.0f);
+
     struct Neuron {
         neuron::Neuron* neuron = nullptr;
         ImVec2 position;
@@ -107,7 +109,7 @@ namespace ui {
 
             ImGui::Text("Input  %f", 0.0);
             ImGui::Text("Activation  %f", 0.0);
-            ImGui::TextColored(ImVec4(0.9f, 0.4f, 0.3f, 1.0f), "Output  %f", 0.0);
+            ImGui::TextColored(LIGHT_RED, "Output  %f", 0.0);
 
             ImGui::Spacing();
             ImGui::Separator();
@@ -159,9 +161,7 @@ namespace ui {
 
                     if (ImGui::IsMouseHoveringRect(upper_left, lower_right) && other_neuron_window) {
                         if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-                            if (neuron.neuron == nullptr) {
-                                // TODO input neuron
-                            } else {
+                            if (neuron.neuron != nullptr) {
                                 selected_neuron = neuron.neuron;
                                 neuron_window = true;
 
@@ -194,7 +194,7 @@ namespace ui {
         }
     }
 
-    void build_network(neuron::Network& network) {
+    void build_network(neuron::Network& network, double** inputs, std::size_t* n) {
         static int input_layer_neurons = 2;
         static int output_layer_neurons = 1;
         static int hidden_layers = 1;
@@ -253,6 +253,10 @@ namespace ui {
                 }
 
                 network.setup(input_layer_neurons, output_layer_neurons, std::move(layers));
+
+                // TODO deallocate first
+                *inputs = new double[input_layer_neurons];
+                *n = input_layer_neurons;
             }
         }
 
@@ -397,6 +401,25 @@ namespace ui {
         ImGui::InputDouble("theta", &network.output_layer.activation_function.theta, 0.1f);
         ImGui::InputDouble("g", &network.output_layer.activation_function.g, 0.1f);
         ImGui::InputDouble("a", &network.output_layer.activation_function.a, 0.1f);
+
+        ImGui::End();
+    }
+
+    void inputs_controls(double* inputs, std::size_t n) {
+        if (ImGui::Begin("Inputs Controls")) {
+            ImGui::Text("Inputs");
+            ImGui::Spacing();
+
+            for (std::size_t i = 0; i < n; i++) {
+                ImGui::PushID(i);
+
+                ImGui::InputDouble("##", inputs + i, 0.01f);
+                ImGui::SameLine();
+                ImGui::Text("%lu", i);
+
+                ImGui::PopID();
+            }
+        }
 
         ImGui::End();
     }
