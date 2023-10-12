@@ -2,8 +2,10 @@
 #include <algorithm>
 #include <array>
 #include <utility>
+#include <cstdio>
 
 #include "ui.hpp"
+#include "helpers.hpp"
 
 namespace ui {
     static constexpr auto LIGHT_RED = ImVec4(0.9f, 0.5f, 0.4f, 1.0f);
@@ -84,7 +86,7 @@ namespace ui {
     static void build_network_struct(const neuron::Network& network, ImVec2 canvas, float offset, Network& result) {
         result.layers.clear();
 
-        const float neuron_spacing = 60.0f;
+        const float neuron_spacing = 70.0f;
         const float height = static_cast<float>(network_height(network)) * neuron_spacing;
 
         float x = offset;
@@ -145,16 +147,35 @@ namespace ui {
             ImDrawList* list = ImGui::GetWindowDrawList();
             const ImVec2 canvas = ImGui::GetCursorScreenPos();
             const float OFFSET = 30.0f;
-            const float NEURON_SIZE = 20.0f;
-            static constexpr auto NEURON_COLOR = IM_COL32(200, 200, 200, 255);
-            static constexpr auto LINK_COLOR = IM_COL32(255, 255, 255, 255);
+            const float NEURON_SIZE = 24.0f;
+            static constexpr auto NEURON_COLOR = IM_COL32(190, 190, 190, 255);
+            static constexpr auto LINK_COLOR = IM_COL32(190, 190, 190, 255);
+            static constexpr auto TEXT_COLOR = IM_COL32(220, 0, 0, 255);
 
             Network result;
             build_network_struct(network, canvas, OFFSET, result);
 
+            for (std::size_t i = 1; i < result.layers.size(); i++) {
+                for (const Neuron& neuron : result.layers[i]) {
+                    for (const Neuron& neuron2 : result.layers[i - 1]) {
+                        list->AddLine(neuron.position, neuron2.position, LINK_COLOR);
+                    }
+                }
+            }
+
             for (const auto& layer : result.layers) {
                 for (const Neuron& neuron : layer) {
                     list->AddCircleFilled(neuron.position, NEURON_SIZE, NEURON_COLOR);
+
+                    if (neuron.neuron != nullptr) {
+                        char text[64];
+                        std::sprintf(text, "%.2f", static_cast<float>(neuron.neuron->result.output));
+
+                        const auto size = ImGui::CalcTextSize(text);
+                        const auto position = ImVec2(neuron.position.x - size.x / 2.0f, neuron.position.y - size.y / 2.0f);
+
+                        list->AddText(position, TEXT_COLOR, text);
+                    }
 
                     const auto upper_left = ImVec2(neuron.position.x - NEURON_SIZE, neuron.position.y - NEURON_SIZE);
                     const auto lower_right = ImVec2(neuron.position.x + NEURON_SIZE, neuron.position.y + NEURON_SIZE);
@@ -168,14 +189,6 @@ namespace ui {
                                 ImGui::SetNextWindowPos(neuron.position);
                             }
                         }
-                    }
-                }
-            }
-
-            for (std::size_t i = 1; i < result.layers.size(); i++) {
-                for (const Neuron& neuron : result.layers[i]) {
-                    for (const Neuron& neuron2 : result.layers[i - 1]) {
-                        list->AddLine(neuron.position, neuron2.position, LINK_COLOR);
                     }
                 }
             }
@@ -194,11 +207,13 @@ namespace ui {
         }
     }
 
-    void build_network(neuron::Network& network, double** inputs, std::size_t* n) {
+    bool build_network(neuron::Network& network, double** inputs, std::size_t* n) {
         static int input_layer_neurons = 2;
         static int output_layer_neurons = 1;
         static int hidden_layers = 1;
         static std::array<int, 3> hidden_layer_neurons = { 3, 1, 1 };
+
+        bool built = false;
 
         if (ImGui::Begin("Build Network")) {
             ImGui::Text("Layers");
@@ -254,16 +269,20 @@ namespace ui {
 
                 network.setup(input_layer_neurons, output_layer_neurons, std::move(layers));
 
-                delete[] *inputs;
-                *inputs = new double[input_layer_neurons];
-                *n = input_layer_neurons;
+                reallocate_double_array(inputs, n, input_layer_neurons);
+
+                built = true;
             }
         }
 
         ImGui::End();
+
+        return built;
     }
 
-    void network_controls(neuron::Network& network) {
+#define RESET_COMBO(ITEM_CURRENT, VALUE) if (reset) { item_current = VALUE; }
+
+    void network_controls(neuron::Network& network, bool reset) {
         if (ImGui::Begin("Network Controls")) {
             ImGui::Text("Functions");
             ImGui::Spacing();
@@ -285,6 +304,8 @@ namespace ui {
                         neuron::functions::min
                     };
 
+                    RESET_COMBO(item_current, 0)
+
                     if (ImGui::Combo("Input", &item_current, items, 4)) {
                         layer.set_input_function(values[item_current]);
                     }
@@ -301,6 +322,8 @@ namespace ui {
                         neuron::ActivationFunction::ramp
                     };
 
+                    RESET_COMBO(item_current, 1)
+
                     if (ImGui::Combo("Activation", &item_current, items, 5)) {
                         layer.set_activation_function(values[item_current]);
                     }
@@ -314,6 +337,8 @@ namespace ui {
                         neuron::functions::binary,
                         neuron::functions::binary2
                     };
+
+                    RESET_COMBO(item_current, 0)
 
                     if (ImGui::Combo("Output", &item_current, items, 3)) {
                         layer.set_output_function(values[item_current]);
@@ -337,6 +362,8 @@ namespace ui {
                     neuron::functions::min
                 };
 
+                RESET_COMBO(item_current, 0)
+
                 if (ImGui::Combo("Input", &item_current, items, 4)) {
                     network.output_layer.set_input_function(values[item_current]);
                 }
@@ -353,6 +380,8 @@ namespace ui {
                     neuron::ActivationFunction::ramp
                 };
 
+                RESET_COMBO(item_current, 1)
+
                 if (ImGui::Combo("Activation", &item_current, items, 5)) {
                     network.output_layer.set_activation_function(values[item_current]);
                 }
@@ -366,6 +395,8 @@ namespace ui {
                     neuron::functions::binary,
                     neuron::functions::binary2
                 };
+
+                RESET_COMBO(item_current, 0)
 
                 if (ImGui::Combo("Output", &item_current, items, 3)) {
                     network.output_layer.set_output_function(values[item_current]);

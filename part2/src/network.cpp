@@ -6,9 +6,9 @@
 #include <functional>
 #include <utility>
 #include <cassert>
-#include <cstring>
 
 #include "network.hpp"
+#include "helpers.hpp"
 
 namespace neuron {
     double ActivationFunction::heaviside(const ActivationFunction* self, double x) {
@@ -206,7 +206,7 @@ namespace neuron {
 
     void Network::clear() {
         input_neurons = 0;
-        output_layer.neurons.clear();
+        output_layer = {};
         hidden_layers.clear();
     }
 
@@ -215,20 +215,14 @@ namespace neuron {
 
         for (Layer& layer : hidden_layers) {
             for (Neuron& neuron : layer.neurons) {
-                delete[] neuron.weights;
-                neuron.weights = new double[current_inputs];
-                neuron.n = current_inputs;
-                std::memset(neuron.weights, 0, current_inputs);  // FIXME doesn't work sometimes
+                reallocate_double_array(&neuron.weights, &neuron.n, current_inputs);
             }
 
             current_inputs = layer.neurons.size();
         }
 
         for (Neuron& neuron : output_layer.neurons) {
-            delete[] neuron.weights;
-            neuron.weights = new double[current_inputs];
-            neuron.n = current_inputs;
-            std::memset(neuron.weights, 0, current_inputs);
+            reallocate_double_array(&neuron.weights, &neuron.n, current_inputs);
         }
     }
 

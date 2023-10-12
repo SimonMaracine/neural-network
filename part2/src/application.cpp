@@ -7,25 +7,16 @@
 #include "ui.hpp"
 
 void NnApplication::start() {
-#if 0
-    neuron::Network::HiddenLayers layers;
-    layers.layers.push_back(3);
-    layers.layers.push_back(3);
-    layers.layers.push_back(4);
 
-    network.setup(2, 1, std::move(layers));
-#endif
 }
 
 void NnApplication::update() {
-    ImGui::ShowDemoWindow();
-
     if (inputs != nullptr) {
         network.run(inputs, nullptr);
     }
 
-    ui::build_network(network, &inputs, &n);
-    ui::network_controls(network);
+    const bool built = ui::build_network(network, &inputs, &n);
+    ui::network_controls(network, built);
     ui::draw_network(network);
     ui::inputs_controls(inputs, n);
 }
