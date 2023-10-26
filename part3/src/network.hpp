@@ -41,7 +41,8 @@ namespace neuron {
 
         void initialize_neurons();
         void allocate_current_inputs(double** inputs, std::size_t* n, const std::vector<Neuron>& neurons);
-        void process_neuron(Neuron& neuron, const Layer& layer, const double* inputs, std::size_t n);
+        void process_neuron_tanh(Neuron& neuron, const double* inputs, std::size_t n);
+        void process_neuron_sigmoid(Neuron& neuron, const double* inputs, std::size_t n);
 
         std::size_t input_neurons {};
         Layer output_layer;

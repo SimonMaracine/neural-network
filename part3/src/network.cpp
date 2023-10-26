@@ -61,7 +61,7 @@ namespace neuron {
         auto& layer = hidden_layers[i];
 
         for (Neuron& neuron : layer.neurons) {
-            process_neuron(neuron, layer, inputs, input_neurons);
+            process_neuron_tanh(neuron, inputs, input_neurons);
         }
 
         std::size_t current_n = 0;
@@ -74,20 +74,18 @@ namespace neuron {
             auto& layer = hidden_layers[i];
 
             for (Neuron& neuron : layer.neurons) {
-                process_neuron(neuron, layer, current_inputs, current_n);
+                process_neuron_tanh(neuron, current_inputs, current_n);
             }
 
             allocate_current_inputs(&current_inputs, &current_n, hidden_layers[i].neurons);
         }
 
         for (Neuron& neuron : output_layer.neurons) {
-            process_neuron(neuron, output_layer, current_inputs, current_n);
+            process_neuron_sigmoid(neuron, current_inputs, current_n);
         }
 
-        if (outputs != nullptr) {
-            for (std::size_t j = 0; j < output_layer.neurons.size(); j++) {
-                outputs[j] = output_layer.neurons[j].output;
-            }
+        for (std::size_t j = 0; j < output_layer.neurons.size(); j++) {
+            outputs[j] = output_layer.neurons[j].output;
         }
     }
 
@@ -123,14 +121,14 @@ namespace neuron {
 
         for (Layer& layer : hidden_layers) {
             for (Neuron& neuron : layer.neurons) {
-                reallocate_double_array(&neuron.weights, &neuron.n, current_inputs);
+                reallocate_double_array_random(&neuron.weights, &neuron.n, current_inputs);
             }
 
             current_inputs = layer.neurons.size();
         }
 
         for (Neuron& neuron : output_layer.neurons) {
-            reallocate_double_array(&neuron.weights, &neuron.n, current_inputs);
+            reallocate_double_array_random(&neuron.weights, &neuron.n, current_inputs);
         }
     }
 
@@ -145,9 +143,15 @@ namespace neuron {
         }
     }
 
-    void Network::process_neuron(Neuron& neuron, const Layer& layer, const double* inputs, std::size_t n) {
+    void Network::process_neuron_tanh(Neuron& neuron, const double* inputs, std::size_t n) {
         const double global_input = functions::sum(inputs, neuron.weights, n);
         const double activation = functions::tanh(global_input, 0.0, 1.0);
+        neuron.output = activation;
+    }
+
+    void Network::process_neuron_sigmoid(Neuron& neuron, const double* inputs, std::size_t n) {
+        const double global_input = functions::sum(inputs, neuron.weights, n);
+        const double activation = functions::sigmoid(global_input, 0.0, 1.0);
         neuron.output = activation;
     }
 }

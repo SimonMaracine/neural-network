@@ -8,27 +8,14 @@
 #include "helpers.hpp"
 
 namespace ui {
-    bool build_network(neuron::Network& network, double** inputs, std::size_t* n) {
-        static int input_layer_neurons = 2;
-        static int output_layer_neurons = 1;
+    bool learning_setup(Learn& learn, neuron::Network& network) {
         static int hidden_layers = 1;
-        static std::array<int, 32> hidden_layer_neurons = { 3, 1, 1 };
+        static std::array<int, 32> hidden_layer_neurons = { 1, 1, 1 };
 
-        bool built = false;
+        bool start = false;
 
-        if (ImGui::Begin("Build Network")) {
-            ImGui::Text("Layers");
-            ImGui::Spacing();
-
-            if (ImGui::InputInt("Input", &input_layer_neurons)) {
-                input_layer_neurons = std::max(input_layer_neurons, 1);
-            }
-
-            ImGui::Spacing();
-            ImGui::Separator();
-            ImGui::Spacing();
-
-            if (ImGui::InputInt("Hidden", &hidden_layers)) {
+        if (ImGui::Begin("Learning Setup")) {
+            if (ImGui::InputInt("Hidden layers", &hidden_layers)) {
                 hidden_layers = std::max(hidden_layers, 1);
                 hidden_layers = std::min(hidden_layers, 32);
             }
@@ -53,37 +40,67 @@ namespace ui {
             ImGui::Separator();
             ImGui::Spacing();
 
-            if (ImGui::InputInt("Output", &output_layer_neurons)) {
-                output_layer_neurons = std::max(output_layer_neurons, 1);
-            }
+            ImGui::InputDouble("Learning rate", &learn.rate);
+            ImGui::InputDouble("Epsilon", &learn.epsilon);
+            ImGui::InputScalar("Max epochs", ImGuiDataType_U64, &learn.max_epochs);
 
             ImGui::Spacing();
             ImGui::Separator();
             ImGui::Spacing();
 
-            if (ImGui::Button("Build")) {
-                neuron::Network::HiddenLayers layers;
+            if (learn.training_set.loaded) {
+                if (ImGui::Button("Start")) {
+                    neuron::Network::HiddenLayers layers;
 
-                for (int i = 0; i < hidden_layers; i++) {
-                    layers.layers.push_back(hidden_layer_neurons[i]);
+                    for (int i = 0; i < hidden_layers; i++) {
+                        layers.layers.push_back(hidden_layer_neurons[i]);
+                    }
+
+                    network.setup(learn.training_set.inputs, learn.training_set.outputs, std::move(layers));
+
+                    start = true;
                 }
-
-                network.setup(input_layer_neurons, output_layer_neurons, std::move(layers));
-
-                reallocate_double_array(inputs, n, input_layer_neurons);
-
-                built = true;
+            } else {
+                if (ImGui::Button("Choose training set")) {
+                    learn.training_set = load_training_set("training_set.txt");  // TODO
+                }
             }
         }
 
         ImGui::End();
 
-        return built;
+        return start;
     }
 
-    void learning_controls() {
-        if (ImGui::Begin("Learning Controls")) {
+    bool learning_process(const Learn& learn) {
+        bool stop = false;
 
+        if (ImGui::Begin("Learning Process")) {
+            ImGui::Text("Epoch index: %lu", learn.epoch_index);
+            ImGui::Text("Step index: %lu", learn.step_index);
+            ImGui::Text("Current error: %f", learn.current_error);
+            ImGui::Separator();
+            ImGui::Text("Learning rate: %f", learn.rate);
+            ImGui::Text("Epsilon: %f", learn.epsilon);
+            ImGui::Text("Max epochs: %lu", learn.max_epochs);
+
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+
+            if (ImGui::Button("Stop")) {
+                stop = true;
+            }
+        }
+
+        ImGui::End();
+
+        return stop;
+    }
+
+    void learning_graph(const Learn& learn) {
+        if (ImGui::Begin("Learning Graph")) {
+            // TODO graph
         }
 
         ImGui::End();

@@ -16,9 +16,14 @@ struct NnApplication : public gui_base::GuiApplication {
     virtual void dispose() override;
 
     neuron::Network network;
-    double* inputs = nullptr;
-    std::size_t n = 0;
 
     Learn learn;
-    bool learning = false;
+
+    enum class State {
+        Setup,
+        Learning,
+        DoneLearning,
+        Testing,
+        DoneTesting
+    } state = State::Setup;
 };
