@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <cstdlib>
 #include <ctime>
+#include <string>
 
 #include <gui_base/gui_base.hpp>
 
@@ -24,6 +25,10 @@ void NnApplication::update() {
             if (learn.training_set.loaded) {
                 ui::training_set(learn.training_set);
             }
+
+            ui::file_browser([this](const std::string& file_path) {
+                learn.training_set.load(file_path);
+            });
 
             break;
         case State::Learning:

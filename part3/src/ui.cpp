@@ -1,9 +1,16 @@
+#include <functional>
+#include <string>
 #include <cstddef>
 #include <algorithm>
 #include <array>
 #include <utility>
 #include <cstdio>
 
+#include <gui_base/gui_base.hpp>
+#include <ImGuiFileDialog.h>
+
+#include "network.hpp"
+#include "learn.hpp"
 #include "ui.hpp"
 #include "helpers.hpp"
 
@@ -79,7 +86,7 @@ namespace ui {
                 }
             } else {
                 if (ImGui::Button("Choose training set")) {
-                    learn.training_set.load("Qualitative_Bankruptcy.data.txt");  // TODO
+                    ui::open_file_browser();
                 }
             }
         }
@@ -202,5 +209,28 @@ namespace ui {
         }
 
         ImGui::End();
+    }
+
+    void open_file_browser() {
+        ImGuiFileDialog::Instance()->OpenDialog(
+            "FileDialog",
+            "Choose File",
+            ".txt",
+            ".",
+            1,
+            nullptr,
+            ImGuiFileDialogFlags_Modal
+        );
+    }
+
+    void file_browser(const std::function<void(const std::string&)>& callback) {
+        if (ImGuiFileDialog::Instance()->Display("FileDialog", 32, ImVec2(768, 432))) {
+            if (ImGuiFileDialog::Instance()->IsOk()) {
+                const auto file_path = ImGuiFileDialog::Instance()->GetFilePathName();
+                callback(file_path);
+            }
+
+            ImGuiFileDialog::Instance()->Close();
+        }
     }
 }

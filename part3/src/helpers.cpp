@@ -9,8 +9,6 @@
 
 #include "helpers.hpp"
 
-#include <iostream>
-
 static Instance::Token parse_token(char* token) {
     if (std::strcmp(token, "P") == 0) {
         return Instance::Positive;
@@ -60,6 +58,8 @@ void reallocate_double_array_random(double** array, std::size_t* old_size, std::
 }
 
 void TrainingSet::load(std::string_view file_name) {
+    // TODO check that data file is valid with regex
+
     std::ifstream stream {std::string(file_name)};
 
     if (!stream.is_open()) {

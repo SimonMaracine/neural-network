@@ -15,6 +15,8 @@ endfunction()
 
 project("neural_network" LANGUAGES CXX)
 
+set(GUI_BASE_INCLUDE_FILE_DIALOG ON)
+
 add_subdirectory(extern/tiny-gui-base)
 
 add_subdirectory(part1)
