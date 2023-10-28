@@ -56,13 +56,13 @@ namespace ui {
                         layers.layers.push_back(hidden_layer_neurons[i]);
                     }
 
-                    network.setup(learn.training_set.inputs, learn.training_set.outputs, std::move(layers));
+                    network.setup(6, 1, std::move(layers));
 
                     start = true;
                 }
             } else {
                 if (ImGui::Button("Choose training set")) {
-                    learn.training_set = load_training_set("training_set.txt");  // TODO
+                    learn.training_set.load("Qualitative_Bankruptcy.data.txt");  // TODO
                 }
             }
         }
