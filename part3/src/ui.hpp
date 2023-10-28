@@ -9,4 +9,5 @@ namespace ui {
     bool learning_setup(Learn& learn, neuron::Network& network);
     bool learning_process(const Learn& learn);
     void learning_graph(const Learn& learn);
+    void training_set(TrainingSet& training_set);
 }

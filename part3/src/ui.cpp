@@ -8,6 +8,23 @@
 #include "helpers.hpp"
 
 namespace ui {
+    static const char* token_to_string(Instance::Token token) {
+        switch (token) {
+            case Instance::Token::Positive:
+                return "P";
+            case Instance::Token::Average:
+                return "A";
+            case Instance::Token::Negative:
+                return "N";
+            case Instance::Token::Bankrupt:
+                return "B";
+            case Instance::Token::NonBankrupt:
+                return "NB";
+        }
+
+        return nullptr;
+    }
+
     bool learning_setup(Learn& learn, neuron::Network& network) {
         static int hidden_layers = 1;
         static std::array<int, 32> hidden_layer_neurons = { 1, 1, 1 };
@@ -101,6 +118,87 @@ namespace ui {
     void learning_graph(const Learn& learn) {
         if (ImGui::Begin("Learning Graph")) {
             // TODO graph
+        }
+
+        ImGui::End();
+    }
+
+    void training_set(TrainingSet& training_set) {
+        if (ImGui::Begin("Training Set")) {
+            if (ImGui::Button("Shuffle")) {
+                training_set.shuffle();
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Normalize")) {
+                training_set.normalize();
+            }
+
+            ImGui::Spacing();
+
+            if (ImGui::BeginTable("Training", 8, ImGuiTableFlags_Borders)) {
+                ImGui::TableSetupColumn("Index");
+                ImGui::TableSetupColumn("Industrial risk");
+                ImGui::TableSetupColumn("Management risk");
+                ImGui::TableSetupColumn("Financial flexibility");
+                ImGui::TableSetupColumn("Credibility");
+                ImGui::TableSetupColumn("Competitiveness");
+                ImGui::TableSetupColumn("Operating risk");
+                ImGui::TableSetupColumn("Class");
+                ImGui::TableHeadersRow();
+
+                for (std::size_t i {1}; const Instance& instance : training_set.data) {
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%lu", i++);
+
+                    if (training_set.normalized) {
+                        ImGui::TableNextColumn();
+                        ImGui::Text("%f", instance.normalized.industrial_risk);
+
+                        ImGui::TableNextColumn();
+                        ImGui::Text("%f", instance.normalized.management_risk);
+
+                        ImGui::TableNextColumn();
+                        ImGui::Text("%f", instance.normalized.financial_flexibility);
+
+                        ImGui::TableNextColumn();
+                        ImGui::Text("%f", instance.normalized.credibility);
+
+                        ImGui::TableNextColumn();
+                        ImGui::Text("%f", instance.normalized.competitiveness);
+
+                        ImGui::TableNextColumn();
+                        ImGui::Text("%f", instance.normalized.operating_risk);
+
+                        ImGui::TableNextColumn();
+                        ImGui::Text("%f", instance.normalized.classification);
+                    } else {
+                        ImGui::TableNextColumn();
+                        ImGui::Text("%s", token_to_string(instance.unnormalized.industrial_risk));
+
+                        ImGui::TableNextColumn();
+                        ImGui::Text("%s", token_to_string(instance.unnormalized.management_risk));
+
+                        ImGui::TableNextColumn();
+                        ImGui::Text("%s", token_to_string(instance.unnormalized.financial_flexibility));
+
+                        ImGui::TableNextColumn();
+                        ImGui::Text("%s", token_to_string(instance.unnormalized.credibility));
+
+                        ImGui::TableNextColumn();
+                        ImGui::Text("%s", token_to_string(instance.unnormalized.competitiveness));
+
+                        ImGui::TableNextColumn();
+                        ImGui::Text("%s", token_to_string(instance.unnormalized.operating_risk));
+
+                        ImGui::TableNextColumn();
+                        ImGui::Text("%s", token_to_string(instance.unnormalized.classification));
+                    }
+                }
+
+                ImGui::EndTable();
+            }
         }
 
         ImGui::End();

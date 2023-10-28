@@ -41,6 +41,7 @@ struct Instance {
 struct TrainingSet {
     std::vector<Instance> data;
     bool loaded = false;
+    bool normalized = false;
 
     void load(std::string_view file_name);
     void shuffle();

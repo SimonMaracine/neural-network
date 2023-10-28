@@ -4,6 +4,8 @@
 #include <string>
 #include <cstring>
 #include <cassert>
+#include <utility>
+#include <iterator>
 
 #include "helpers.hpp"
 
@@ -51,8 +53,9 @@ void reallocate_double_array_random(double** array, std::size_t* old_size, std::
     *array = new double[size];
     *old_size = size;
 
-    for (std::size_t i = 0; i < size; i++) {
-        (*array)[i] = static_cast<double>(std::rand()) / static_cast<double>(RAND_MAX);
+    for (std::size_t i {0}; i < size; i++) {
+        const double normalized {static_cast<double>(std::rand()) / static_cast<double>(RAND_MAX)};
+        (*array)[i] = normalized * 2.0f - 1.0f;
     }
 }
 
@@ -75,7 +78,7 @@ void TrainingSet::load(std::string_view file_name) {
         char* string = new char[line.size() - 1];
         std::strncpy(string, line.c_str(), line.size() - 1);
 
-        char* token = nullptr;
+        char* token {nullptr};
 
         token = std::strtok(string, ",");
         instance.unnormalized.industrial_risk = parse_token(token);
@@ -107,9 +110,31 @@ void TrainingSet::load(std::string_view file_name) {
 }
 
 void TrainingSet::shuffle() {
+    std::vector<Instance> new_data;
+    new_data.reserve(data.size());
 
+    while (!data.empty()) {
+        const std::size_t index {static_cast<std::size_t>(std::rand() % data.size())};
+        new_data.push_back(data[index]);
+        data.erase(std::next(data.cbegin(), index));
+    }
+
+    data = std::move(new_data);
 }
 
 void TrainingSet::normalize() {
+    for (Instance& instance : data) {
+        Instance new_instance;
+        new_instance.normalized.industrial_risk = normalize_token(instance.unnormalized.industrial_risk);
+        new_instance.normalized.management_risk = normalize_token(instance.unnormalized.management_risk);
+        new_instance.normalized.financial_flexibility = normalize_token(instance.unnormalized.financial_flexibility);
+        new_instance.normalized.credibility = normalize_token(instance.unnormalized.credibility);
+        new_instance.normalized.competitiveness = normalize_token(instance.unnormalized.competitiveness);
+        new_instance.normalized.operating_risk = normalize_token(instance.unnormalized.operating_risk);
+        new_instance.normalized.classification = normalize_token(instance.unnormalized.classification);
 
+        instance.normalized = new_instance.normalized;
+    }
+
+    normalized = true;
 }
