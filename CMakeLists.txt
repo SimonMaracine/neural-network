@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
+project("neural_network" LANGUAGES CXX)
+
 function(set_compile_options TARGET)
     if(UNIX)
         target_compile_options(${TARGET} PRIVATE "-Wall" "-Wextra" "-Wpedantic")
@@ -13,9 +15,8 @@ function(set_compile_options TARGET)
     set_target_properties(${TARGET} PROPERTIES CXX_EXTENSIONS OFF)
 endfunction()
 
-project("neural_network" LANGUAGES CXX)
-
 set(GUI_BASE_INCLUDE_FILE_DIALOG ON)
+set(GUI_BASE_INCLUDE_PLOTTING ON)
 
 add_subdirectory(extern/tiny-gui-base)
 
