@@ -8,6 +8,7 @@
 
 #include <gui_base/gui_base.hpp>
 #include <ImGuiFileDialog.h>
+#include <implot.h>
 
 #include "network.hpp"
 #include "learn.hpp"
@@ -32,13 +33,20 @@ namespace ui {
         return nullptr;
     }
 
-    bool learning_setup(Learn& learn, neuron::Network<6, 1>& network) {
+    bool learning_setup(Learn<6, 1>& learn, neuron::Network<6, 1>& network) {
         static int hidden_layers = 1;
         static std::array<int, 32> hidden_layer_neurons = { 1, 1, 1 };
 
         bool start = false;
 
         if (ImGui::Begin("Learning Setup")) {
+            ImGui::Text("Inputs: %lu", network.get_inputs());
+            ImGui::Text("Outputs: %lu", network.get_outputs());
+
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+
             if (ImGui::InputInt("Hidden layers", &hidden_layers)) {
                 hidden_layers = std::max(hidden_layers, 1);
                 hidden_layers = std::min(hidden_layers, 32);
@@ -64,15 +72,15 @@ namespace ui {
             ImGui::Separator();
             ImGui::Spacing();
 
-            ImGui::InputDouble("Learning rate", &learn.rate);
-            ImGui::InputDouble("Epsilon", &learn.epsilon);
-            ImGui::InputScalar("Max epochs", ImGuiDataType_U64, &learn.max_epochs);
+            ImGui::InputDouble("Learning rate", &learn.options.rate);
+            ImGui::InputDouble("Epsilon", &learn.options.epsilon);
+            ImGui::InputScalar("Max epochs", ImGuiDataType_U64, &learn.options.max_epochs);
 
             ImGui::Spacing();
             ImGui::Separator();
             ImGui::Spacing();
 
-            if (learn.training_set.loaded) {
+            if (learn.training_set.loaded && learn.training_set.normalized) {
                 if (ImGui::Button("Start")) {
                     neuron::HiddenLayers layers;
 
@@ -96,35 +104,55 @@ namespace ui {
         return start;
     }
 
-    bool learning_process(const Learn& learn) {
-        bool stop = false;
+    int learning_process(const Learn<6, 1>& learn) {
+        int result {0};
 
         if (ImGui::Begin("Learning Process")) {
             ImGui::Text("Epoch index: %lu", learn.epoch_index);
             ImGui::Text("Step index: %lu", learn.step_index);
             ImGui::Text("Current error: %f", learn.current_error);
             ImGui::Separator();
-            ImGui::Text("Learning rate: %f", learn.rate);
-            ImGui::Text("Epsilon: %f", learn.epsilon);
-            ImGui::Text("Max epochs: %lu", learn.max_epochs);
+            ImGui::Text("Learning rate: %f", learn.options.rate);
+            ImGui::Text("Epsilon: %f", learn.options.epsilon);
+            ImGui::Text("Max epochs: %lu", learn.options.max_epochs);
 
             ImGui::Spacing();
             ImGui::Separator();
             ImGui::Spacing();
 
-            if (ImGui::Button("Stop")) {
-                stop = true;
+            if (learn.is_running()) {
+                if (ImGui::Button("Stop")) {
+                    result = -1;
+                }
+            } else {
+                if (ImGui::Button("Start")) {
+                    result = 1;
+                }
             }
         }
 
         ImGui::End();
 
-        return stop;
+        return result;
     }
 
-    void learning_graph(const Learn& learn) {
+    void learning_graph(const Learn<6, 1>& learn) {
         if (ImGui::Begin("Learning Graph")) {
-            // TODO graph
+            ImPlot::SetNextAxesToFit();
+
+            if (ImPlot::BeginPlot("Epoch Error", ImVec2(-1.0f, 0.0f), ImPlotAxisFlags_AutoFit)) {
+                ImPlot::SetupAxes("Index", "Error");
+                ImPlot::SetupAxisLimits(ImAxis_Y1, 0.0, 1.0);
+
+                ImPlot::PlotLine(
+                    "Epoch Error",
+                    learn.error_graph.indices.data(),
+                    learn.error_graph.errors.data(),
+                    static_cast<int>(learn.error_graph.indices.size())
+                );
+
+                ImPlot::EndPlot();
+            }
         }
 
         ImGui::End();

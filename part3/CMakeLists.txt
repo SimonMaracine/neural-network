@@ -5,7 +5,6 @@ add_executable(nn3
     "src/application.hpp"
     "src/helpers.cpp"
     "src/helpers.hpp"
-    "src/learn.cpp"
     "src/learn.hpp"
     "src/main.cpp"
     "src/network.cpp"

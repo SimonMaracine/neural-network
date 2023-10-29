@@ -180,6 +180,9 @@ namespace neuron {
             process_neuron(neuron, output_layer, current_inputs, current_n);
         }
 
+        // Delete last allocation
+        delete[] current_inputs;
+
         if (outputs != nullptr) {
             for (std::size_t j = 0; j < output_layer.neurons.size(); j++) {
                 outputs[j] = output_layer.neurons[j].result.output;

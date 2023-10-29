@@ -5,12 +5,15 @@
 #include <string>
 
 #include <gui_base/gui_base.hpp>
+#include <implot.h>
 
 #include "application.hpp"
 #include "ui.hpp"
 
 void NnApplication::start() {
     std::srand(std::time(nullptr));
+
+    ImPlot::CreateContext();
 }
 
 void NnApplication::update() {
@@ -19,6 +22,7 @@ void NnApplication::update() {
     switch (state) {
         case State::Setup:
             if (ui::learning_setup(learn, network)) {
+                learn.start(network);
                 state = State::Learning;
             }
 
@@ -31,30 +35,43 @@ void NnApplication::update() {
             });
 
             break;
-        case State::Learning:
-            if (ui::learning_process(learn)) {
+        case State::Learning: {
+            const int result = ui::learning_process(learn);
+
+            if (result < 0) {
+                learn.stop();
                 state = State::DoneLearning;
             }
 
             ui::learning_graph(learn);
+
+            if (!learn.is_running()) {
+                state = State::DoneLearning;
+            }
+
             break;
-        case State::DoneLearning:
-            ui::learning_process(learn);
+        }
+        case State::DoneLearning: {
+            const int result = ui::learning_process(learn);
+
+            if (result > 0) {
+                learn.reset();
+                learn.start(network);
+                state = State::Learning;
+            }
+
             ui::learning_graph(learn);
+
             break;
+        }
         case State::Testing:
             break;
         case State::DoneTesting:
             break;
     }
-
-    if (state == State::Learning) {
-        if (learn.update(network)) {
-            state = State::DoneLearning;
-        }
-    }
 }
 
 void NnApplication::dispose() {
-
+    learn.reset();
+    ImPlot::DestroyContext();
 }

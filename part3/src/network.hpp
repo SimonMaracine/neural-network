@@ -47,6 +47,14 @@ namespace neuron {
         void setup(HiddenLayers&& hidden_layers);
         void clear();
 
+        constexpr std::size_t get_inputs() const {
+            return Inputs;
+        }
+
+        constexpr std::size_t get_outputs() const {
+            return Outputs;
+        }
+
         void initialize_neurons();
         void allocate_current_inputs(double** inputs, std::size_t* n, const std::vector<Neuron>& neurons);
         void process_neuron_tanh(Neuron& neuron, const double* inputs, std::size_t n);
@@ -85,6 +93,9 @@ namespace neuron {
         for (Neuron& neuron : output_layer.neurons) {
             process_neuron_sigmoid(neuron, current_inputs, current_n);
         }
+
+        // Delete last allocation
+        delete[] current_inputs;
 
         for (std::size_t j = 0; j < output_layer.neurons.size(); j++) {
             outputs[j] = output_layer.neurons[j].output;

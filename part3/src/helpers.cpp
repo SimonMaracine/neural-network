@@ -28,18 +28,18 @@ static Instance::Token parse_token(char* token) {
     return {};
 }
 
-static float normalize_token(Instance::Token token) {
+static double normalize_token(Instance::Token token) {
     switch (token) {
         case Instance::Token::Positive:
-            return 0.83333f;
+            return 0.8333333;
         case Instance::Token::Average:
-            return 0.5f;
+            return 0.5;
         case Instance::Token::Negative:
-            return 0.16666f;
+            return 0.1666666;
         case Instance::Token::Bankrupt:
-            return 0.25f;
+            return 1.0;
         case Instance::Token::NonBankrupt:
-            return 0.75f;
+            return 0.0;
     }
 
     assert(false);

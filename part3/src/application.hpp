@@ -17,7 +17,7 @@ struct NnApplication : public gui_base::GuiApplication {
 
     neuron::Network<6, 1> network;
 
-    Learn learn;
+    Learn<6, 1> learn;
 
     enum class State {
         Setup,
