@@ -6,6 +6,7 @@
 #include <cassert>
 #include <utility>
 #include <iterator>
+#include <regex>
 
 #include "helpers.hpp"
 
@@ -46,6 +47,12 @@ static float normalize_token(Instance::Token token) {
     return {};
 }
 
+static bool check_line(const std::string& line) {
+    std::regex pattern {"^([PAN],){6}(B|NB)$"};
+
+    return std::regex_match(line.cbegin(), line.cend(), pattern);
+}
+
 void reallocate_double_array_random(double** array, std::size_t* old_size, std::size_t size) {
     delete[] *array;
     *array = new double[size];
@@ -57,14 +64,14 @@ void reallocate_double_array_random(double** array, std::size_t* old_size, std::
     }
 }
 
-void TrainingSet::load(std::string_view file_name) {
-    // TODO check that data file is valid with regex
-
+bool TrainingSet::load(std::string_view file_name) {
     std::ifstream stream {std::string(file_name)};
 
     if (!stream.is_open()) {
-        return;
+        return false;
     }
+
+    data.clear();
 
     while (true) {
         std::string line;
@@ -77,6 +84,12 @@ void TrainingSet::load(std::string_view file_name) {
 
         char* string = new char[line.size() - 1];
         std::strncpy(string, line.c_str(), line.size() - 1);
+
+        if (!check_line(string)) {
+            loaded = false;
+
+            return false;
+        }
 
         char* token {nullptr};
 
@@ -107,6 +120,8 @@ void TrainingSet::load(std::string_view file_name) {
     }
 
     loaded = true;
+
+    return true;
 }
 
 void TrainingSet::shuffle() {

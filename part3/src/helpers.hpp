@@ -43,7 +43,7 @@ struct TrainingSet {
     bool loaded = false;
     bool normalized = false;
 
-    void load(std::string_view file_name);
+    bool load(std::string_view file_name);
     void shuffle();
     void normalize();
 };
