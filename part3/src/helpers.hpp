@@ -42,10 +42,12 @@ struct TrainingSet {
     std::vector<Instance> data;
     bool loaded = false;
     bool normalized = false;
+    std::size_t training_instance_count {0};
 
     bool load(std::string_view file_name);
     void shuffle();
     void normalize();
+    void set_testing(float percent_for_testing);
 };
 
 void reallocate_double_array_random(double** array, std::size_t* old_size, std::size_t size);

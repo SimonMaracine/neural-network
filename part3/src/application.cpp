@@ -31,7 +31,9 @@ void NnApplication::update() {
             }
 
             ui::file_browser([this](const std::string& file_path) {
-                learn.training_set.load(file_path);  // TODO check return
+                if (learn.training_set.load(file_path)) {
+                    learn.training_set.set_testing(20.0f);
+                }
             });
 
             break;

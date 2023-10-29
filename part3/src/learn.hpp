@@ -128,7 +128,7 @@ bool Learn<Inputs, Outputs>::update(neuron::Network<Inputs, Outputs>& network) {
     // Next training set instance
     step_index++;
 
-    if (step_index == training_set.data.size()) {
+    if (step_index == training_set.training_instance_count) {
         // Next epoch
 
         // TODO calculate epoch error

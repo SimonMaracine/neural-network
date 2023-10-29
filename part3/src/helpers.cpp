@@ -153,3 +153,10 @@ void TrainingSet::normalize() {
 
     normalized = true;
 }
+
+void TrainingSet::set_testing(float percent_for_testing) {
+    assert(percent_for_testing > 0.0f && percent_for_testing < 100.0f);
+
+    const float instances_for_testing {(static_cast<float>(data.size()) * percent_for_testing) / 100.0f};
+    training_instance_count = data.size() - static_cast<std::size_t>(instances_for_testing);
+}

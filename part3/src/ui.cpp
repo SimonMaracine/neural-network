@@ -185,7 +185,13 @@ namespace ui {
 
                 for (std::size_t i {1}; const Instance& instance : training_set.data) {
                     ImGui::TableNextColumn();
-                    ImGui::Text("%lu", i++);
+                    ImGui::Text("%lu", i);
+
+                    if (i > training_set.training_instance_count) {
+                        ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(45, 45, 55, 255));
+                    }
+
+                    i++;
 
                     if (training_set.normalized) {
                         ImGui::TableNextColumn();
