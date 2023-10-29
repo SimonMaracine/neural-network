@@ -9,7 +9,7 @@
 #include "learn.hpp"
 
 namespace ui {
-    bool learning_setup(Learn& learn, neuron::Network& network);
+    bool learning_setup(Learn& learn, neuron::Network<6, 1>& network);
     bool learning_process(const Learn& learn);
     void learning_graph(const Learn& learn);
     void training_set(TrainingSet& training_set);

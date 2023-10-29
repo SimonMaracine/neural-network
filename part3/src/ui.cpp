@@ -32,7 +32,7 @@ namespace ui {
         return nullptr;
     }
 
-    bool learning_setup(Learn& learn, neuron::Network& network) {
+    bool learning_setup(Learn& learn, neuron::Network<6, 1>& network) {
         static int hidden_layers = 1;
         static std::array<int, 32> hidden_layer_neurons = { 1, 1, 1 };
 
@@ -74,13 +74,13 @@ namespace ui {
 
             if (learn.training_set.loaded) {
                 if (ImGui::Button("Start")) {
-                    neuron::Network::HiddenLayers layers;
+                    neuron::HiddenLayers layers;
 
                     for (int i = 0; i < hidden_layers; i++) {
                         layers.layers.push_back(hidden_layer_neurons[i]);
                     }
 
-                    network.setup(6, 1, std::move(layers));
+                    network.setup(std::move(layers));
 
                     start = true;
                 }

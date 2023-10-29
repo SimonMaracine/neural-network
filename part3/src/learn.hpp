@@ -17,6 +17,6 @@ struct Learn {
     double* inputs = nullptr;
     double* outputs = nullptr;
 
-    void setup(const neuron::Network& network);
-    bool update(neuron::Network& network);
+    void setup(const neuron::Network<6, 1>& network);
+    bool update(neuron::Network<6, 1>& network);
 };

@@ -1,11 +1,11 @@
 #include "network.hpp"
 #include "learn.hpp"
 
-void Learn::setup(const neuron::Network& network) {
+void Learn::setup(const neuron::Network<6, 1>& network) {
     outputs = new double[network.output_layer.neurons.size()];
 }
 
-bool Learn::update(neuron::Network& network) {
+bool Learn::update(neuron::Network<6, 1>& network) {
     network.run(inputs, outputs);
 
 
