@@ -8,18 +8,57 @@
 #include <functional>
 #include <utility>
 #include <cassert>
+#include <cmath>
 
 #include "helpers.hpp"
 
 namespace neuron {
     namespace functions {
-        double sum(const double* inputs, const double* weights, std::size_t size);
+        constexpr double sum(const double* inputs, const double* weights, std::size_t size) {
+            double result = 0.0;
 
-        double sigmoid(double x, double theta, double g);
-        double tanh(double x, double theta, double g);
+            for (std::size_t i = 0; i < size; i++) {
+                result += inputs[i] * weights[i];
+            }
 
-        double binary(double x);
-        double binary2(double x);
+            return result;
+        }
+
+        constexpr double sigmoid(double x, double theta, double g) {
+            constexpr double e = std::numbers::e_v<double>;
+            constexpr double one = 1.0;
+
+            return one / (one + std::pow(e, -g * (x - theta)));
+        }
+
+        constexpr double sigmoid_derivative(double x) {
+            return x * (1.0 - x);
+        }
+
+        constexpr double tanh(double x, double theta, double g) {
+            constexpr double e = std::numbers::e_v<double>;
+
+            const double a = std::pow(e, g * (x - theta));
+            const double b = std::pow(e, -g * (x - theta));
+
+            return (a - b) / (a + b);
+        }
+
+        constexpr double binary(double x) {
+            if (x >= 0.5) {
+                return 1.0;
+            } else {
+                return 0.0;
+            }
+        }
+
+        constexpr double binary2(double x) {
+            if (x >= 0.0) {
+                return 1.0;
+            } else {
+                return -1.0;
+            }
+        }
     }
 
     struct Neuron {

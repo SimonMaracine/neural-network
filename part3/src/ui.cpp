@@ -110,7 +110,7 @@ namespace ui {
         if (ImGui::Begin("Learning Process")) {
             ImGui::Text("Epoch index: %lu", learn.epoch_index);
             ImGui::Text("Step index: %lu", learn.step_index);
-            ImGui::Text("Current error: %f", learn.current_error);
+            ImGui::Text("Current error: %f", learn.epoch_error);
             ImGui::Separator();
             ImGui::Text("Learning rate: %f", learn.options.rate);
             ImGui::Text("Epsilon: %f", learn.options.epsilon);

@@ -7,7 +7,6 @@ add_executable(nn3
     "src/helpers.hpp"
     "src/learn.hpp"
     "src/main.cpp"
-    "src/network.cpp"
     "src/network.hpp"
     "src/ui.cpp"
     "src/ui.hpp"

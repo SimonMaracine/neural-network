@@ -27,14 +27,15 @@ template<std::size_t Inputs, std::size_t Outputs>
 class Learn {
 public:
     struct Options {
-        double rate {1.0};
+        double rate {0.5};
         double epsilon {0.1};
         unsigned long max_epochs {100'000};
     } options;
 
     unsigned long epoch_index {0};
     std::size_t step_index {0};
-    double current_error {1.0};  // Epoch error
+    double epoch_error {1.0};  // Epoch error
+    std::vector<double> step_errors;
 
     ErrorGraph error_graph;
 
@@ -55,6 +56,8 @@ private:
 
     bool update(neuron::Network<Inputs, Outputs>& network);  // Return true when it should stop
     double calculate_step_error(double* outputs, double* expected_outputs);
+    double calculate_epoch_error();
+    void backpropagation(double* outputs, double* expected_outputs, neuron::Network<Inputs, Outputs>& network);
 };
 
 template<std::size_t Inputs, std::size_t Outputs>
@@ -88,7 +91,7 @@ void Learn<Inputs, Outputs>::reset() {
     options = Options();
     epoch_index = 0;
     step_index = 0;
-    current_error = 1.0;
+    epoch_error = 1.0;
     error_graph.clear();
     inputs = {};
     outputs = {};
@@ -97,7 +100,7 @@ void Learn<Inputs, Outputs>::reset() {
 
 template<std::size_t Inputs, std::size_t Outputs>
 bool Learn<Inputs, Outputs>::update(neuron::Network<Inputs, Outputs>& network) {
-    if (epoch_index == options.max_epochs || current_error < options.epsilon) {
+    if (epoch_index == options.max_epochs || epoch_error < options.epsilon) {
         return true;
     }
 
@@ -118,12 +121,10 @@ bool Learn<Inputs, Outputs>::update(neuron::Network<Inputs, Outputs>& network) {
 
     // Calculate error
     const double error = calculate_step_error(outputs.data(), expected_outputs.data());
+    step_errors.push_back(error);
 
-    // TODO compute error and do backpropagation; return true when it should stop
-
-
-
-
+    // Learn pass
+    backpropagation(outputs.data(), expected_outputs.data(), network);
 
     // Next training set instance
     step_index++;
@@ -131,10 +132,10 @@ bool Learn<Inputs, Outputs>::update(neuron::Network<Inputs, Outputs>& network) {
     if (step_index == training_set.training_instance_count) {
         // Next epoch
 
-        // TODO calculate epoch error
-        const double e = static_cast<double>(std::rand()) / static_cast<double>(RAND_MAX);
+        epoch_error = calculate_epoch_error();
+        step_errors.clear();
 
-        error_graph.push(epoch_index, e);
+        error_graph.push(epoch_index, epoch_error);
 
         epoch_index++;
         step_index = 0;
@@ -145,5 +146,42 @@ bool Learn<Inputs, Outputs>::update(neuron::Network<Inputs, Outputs>& network) {
 
 template<std::size_t Inputs, std::size_t Outputs>
 double Learn<Inputs, Outputs>::calculate_step_error(double* outputs, double* expected_outputs) {
-    return {};
+    double error_sum {0.0};
+
+    for (std::size_t i {0}; i < Outputs; i++) {
+        const double error = outputs[i] - expected_outputs[i];
+        error_sum += error * error;
+    }
+
+    return error_sum / 2.0;  // FIXME is it right?
+}
+
+template<std::size_t Inputs, std::size_t Outputs>
+double Learn<Inputs, Outputs>::calculate_epoch_error() {
+    double result_error {0.0};
+
+    for (const double error : step_errors) {
+        result_error += error;
+    }
+
+    result_error /= static_cast<double>(step_errors.size());
+
+    return result_error;
+}
+
+template<std::size_t Inputs, std::size_t Outputs>
+void Learn<Inputs, Outputs>::backpropagation(double* outputs, double* expected_outputs, neuron::Network<Inputs, Outputs>& network) {
+    for (std::size_t i {0}; i < Outputs; i++) {
+        neuron::Neuron& neuron {network.output_layer.neurons[i]};
+
+        const double delta {outputs[i] - expected_outputs[i] * neuron::functions::sigmoid_derivative(outputs[i])};
+        auto& last_hidden_layer {network.hidden_layers[network.hidden_layers.size() - 1]};
+
+        for (std::size_t j {0}; j < neuron.n; j++) {
+            const double delta_weight {options.rate * last_hidden_layer.neurons[j].output * delta};
+            neuron.weights[j] += delta_weight;  // FIXME is it right?
+        }
+    }
+
+    // TODO hidden layers
 }
