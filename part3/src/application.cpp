@@ -57,6 +57,7 @@ void NnApplication::update() {
             const int result = ui::learning_process(learn);
 
             if (result > 0) {
+                network.initialize_neurons();
                 learn.reset();
                 learn.start(network);
                 state = State::Learning;

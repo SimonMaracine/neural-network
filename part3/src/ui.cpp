@@ -35,7 +35,7 @@ namespace ui {
 
     bool learning_setup(Learn<6, 1>& learn, neuron::Network<6, 1>& network) {
         static int hidden_layers = 1;
-        static std::array<int, 32> hidden_layer_neurons = { 1, 1, 1 };
+        static std::array<int, 32> hidden_layer_neurons = { 32, 32, 32 };
 
         bool start = false;
 

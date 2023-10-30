@@ -44,6 +44,10 @@ namespace neuron {
             return (a - b) / (a + b);
         }
 
+        constexpr double tanh_derivative(double x) {
+            return 1.0 - x * x;
+        }
+
         constexpr double binary(double x) {
             if (x >= 0.5) {
                 return 1.0;
@@ -65,6 +69,7 @@ namespace neuron {
         double* weights = nullptr;
         std::size_t n = 0;
         double output = 0.0;
+        double delta = 0.0;
     };
 
     struct HiddenLayer {
@@ -81,10 +86,11 @@ namespace neuron {
     };
 
     template<std::size_t Inputs, std::size_t Outputs>
-    struct Network {
+    class Network {
+    public:
         void run(const double* inputs, double* outputs);
         void setup(HiddenLayers&& hidden_layers);
-        void clear();
+        void initialize_neurons();
 
         constexpr std::size_t get_inputs() const {
             return Inputs;
@@ -94,13 +100,13 @@ namespace neuron {
             return Outputs;
         }
 
-        void initialize_neurons();
+        OutputLayer<Outputs> output_layer;
+        std::vector<HiddenLayer> hidden_layers;
+    private:
+        void clear();
         void allocate_current_inputs(double** inputs, std::size_t* n, const std::vector<Neuron>& neurons);
         void process_neuron_tanh(Neuron& neuron, const double* inputs, std::size_t n);
         void process_neuron_sigmoid(Neuron& neuron, const double* inputs, std::size_t n);
-
-        OutputLayer<Outputs> output_layer;
-        std::vector<HiddenLayer> hidden_layers;
     };
 
     template<std::size_t Inputs, std::size_t Outputs>
@@ -162,12 +168,6 @@ namespace neuron {
     }
 
     template<std::size_t Inputs, std::size_t Outputs>
-    void Network<Inputs, Outputs>::clear() {
-        output_layer = {};
-        hidden_layers.clear();
-    }
-
-    template<std::size_t Inputs, std::size_t Outputs>
     void Network<Inputs, Outputs>::initialize_neurons() {
         std::size_t current_inputs = Inputs;
 
@@ -182,6 +182,12 @@ namespace neuron {
         for (Neuron& neuron : output_layer.neurons) {
             reallocate_double_array_random(&neuron.weights, &neuron.n, current_inputs);
         }
+    }
+
+    template<std::size_t Inputs, std::size_t Outputs>
+    void Network<Inputs, Outputs>::clear() {
+        output_layer = {};
+        hidden_layers.clear();
     }
 
     template<std::size_t Inputs, std::size_t Outputs>

@@ -138,6 +138,10 @@ void TrainingSet::shuffle() {
 }
 
 void TrainingSet::normalize() {
+    if (normalized) {
+        return;
+    }
+
     for (Instance& instance : data) {
         Instance new_instance;
         new_instance.normalized.industrial_risk = normalize_token(instance.unnormalized.industrial_risk);
