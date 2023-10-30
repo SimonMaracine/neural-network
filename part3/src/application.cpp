@@ -17,13 +17,10 @@ void NnApplication::start() {
 }
 
 void NnApplication::update() {
-    ImGui::ShowDemoWindow();
-
     switch (state) {
         case State::Setup:
             if (ui::learning_setup(learn, network)) {
-                learn.start(network);
-                state = State::Learning;
+                state = State::ReadyLearning;
             }
 
             if (learn.training_set.loaded) {
@@ -37,33 +34,36 @@ void NnApplication::update() {
             });
 
             break;
-        case State::Learning: {
-            const int result = ui::learning_process(learn);
+        case State::ReadyLearning: {
+            ui::learning_setup(learn, network);
 
-            if (result < 0) {
+            const auto result = ui::learning_process(learn);
+
+            if (result == ui::Operation::Start) {
+                learn.reset();
+                learn.start(network);
+                state = State::Learning;
+            } else if (result == ui::Operation::Reinitialize) {
+                network.initialize_neurons();
+            }
+
+            ui::learning_graph(learn);
+
+            break;
+        }
+        case State::Learning: {
+            const auto result = ui::learning_process(learn);
+
+            if (result == ui::Operation::Stop) {
                 learn.stop();
-                state = State::DoneLearning;
+                state = State::ReadyLearning;
             }
 
             ui::learning_graph(learn);
 
             if (!learn.is_running()) {
-                state = State::DoneLearning;
+                state = State::ReadyLearning;
             }
-
-            break;
-        }
-        case State::DoneLearning: {
-            const int result = ui::learning_process(learn);
-
-            if (result > 0) {
-                network.initialize_neurons();
-                learn.reset();
-                learn.start(network);
-                state = State::Learning;
-            }
-
-            ui::learning_graph(learn);
 
             break;
         }

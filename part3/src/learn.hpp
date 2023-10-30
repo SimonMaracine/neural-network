@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <vector>
 #include <thread>
+#include <iterator>
 
 #include "network.hpp"
 #include "helpers.hpp"
@@ -27,9 +28,9 @@ template<std::size_t Inputs, std::size_t Outputs>
 class Learn {
 public:
     struct Options {
-        double rate {0.1};
-        double epsilon {0.1};
-        unsigned long max_epochs {100'000};
+        double learning_rate {0.05};
+        double epsilon {0.01};
+        unsigned long max_epochs {10'000};
     } options;
 
     unsigned long epoch_index {0};
@@ -79,17 +80,16 @@ void Learn<Inputs, Outputs>::start(neuron::Network<Inputs, Outputs>& network) {
 template<std::size_t Inputs, std::size_t Outputs>
 void Learn<Inputs, Outputs>::stop() {
     running = false;
-}
-
-template<std::size_t Inputs, std::size_t Outputs>
-void Learn<Inputs, Outputs>::reset() {
-    running = false;
 
     if (thread.joinable()) {
         thread.join();
     }
+}
 
-    options = Options();
+template<std::size_t Inputs, std::size_t Outputs>
+void Learn<Inputs, Outputs>::reset() {
+    stop();
+
     epoch_index = 0;
     step_index = 0;
     epoch_error = 1.0;
@@ -176,35 +176,77 @@ void Learn<Inputs, Outputs>::backpropagation(double* outputs, double* expected_o
     for (std::size_t i {0}; i < Outputs; i++) {
         neuron::Neuron& neuron {network.output_layer.neurons[i]};
 
-        neuron.delta = (outputs[i] - expected_outputs[i]) * neuron::functions::sigmoid_derivative(outputs[i]);
+        const double layer_error {outputs[i] - expected_outputs[i]};
 
-        auto& last_hidden_layer {network.hidden_layers[network.hidden_layers.size() - 1]};
+        neuron.delta = layer_error * neuron::functions::sigmoid_derivative(outputs[i]);
 
         for (std::size_t j {0}; j < neuron.n; j++) {
-            const double delta_weight {options.rate * last_hidden_layer.neurons[j].output * neuron.delta};
-            neuron.weights[j] += delta_weight;
+            auto& last_hidden_layer {network.hidden_layers[network.hidden_layers.size() - 1]};
+
+            const double change {options.learning_rate * last_hidden_layer.neurons[j].output * neuron.delta};
+            neuron.weights[j] -= change;
         }
     }
 
-    // Last hidden layer
+    // Hidden layers
+    for (auto iter = network.hidden_layers.rbegin(); iter != network.hidden_layers.rend(); iter++) {
+        const bool is_last_hidden_layer {iter == network.hidden_layers.rbegin()};
+        const bool is_first_hidden_layer {iter == std::prev(network.hidden_layers.rend())};
+
+        for (std::size_t i {0}; i < iter->neurons.size(); i++) {
+            neuron::Neuron& neuron {iter->neurons[i]};
+
+            double layer_error {0.0};
+
+            if (is_last_hidden_layer) {
+                for (auto iter2 = network.output_layer.neurons.begin(); iter2 != network.output_layer.neurons.end(); iter2++) {
+                    neuron::Neuron& neuron {*iter2};
+
+                    layer_error += neuron.weights[i] * neuron.delta;
+                }
+            } else {
+                for (auto iter2 = std::prev(iter)->neurons.begin(); iter2 != std::prev(iter)->neurons.end(); iter2++) {
+                    neuron::Neuron& neuron {*iter2};
+
+                    layer_error += neuron.weights[i] * neuron.delta;
+                }
+            }
+
+            neuron.delta = layer_error * neuron::functions::tanh_derivative(neuron.output);
+
+            if (is_first_hidden_layer) {
+                for (std::size_t j {0}; j < neuron.n; j++) {
+                    const double change {options.learning_rate * inputs[j] * neuron.delta};
+                    neuron.weights[j] -= change;
+                }
+            } else {
+                for (std::size_t j {0}; j < neuron.n; j++) {
+                    const double change {options.learning_rate * std::next(iter)->neurons[j].output * neuron.delta};
+                    neuron.weights[j] -= change;
+                }
+            }
+        }
+    }
+
+    // // Last hidden layer
     // for (std::size_t i {0}; i < network.hidden_layers.rbegin()->neurons.size(); i++) {
     //     neuron::Neuron& neuron {network.hidden_layers[network.hidden_layers.size() - 1].neurons[i]};
 
-    //     double delta_sum {0.0};
+    //     double layer_error {0.0};
     //     for (auto iter = network.output_layer.neurons.begin(); iter != network.output_layer.neurons.end(); iter++) {
     //         neuron::Neuron& neuron {*iter};
 
-    //         delta_sum += neuron.weights[i] * neuron.delta;
+    //         layer_error += neuron.weights[i] * neuron.delta;
     //     }
 
-    //     neuron.delta = delta_sum * neuron::functions::tanh_derivative(neuron.output);  // FIXME
+    //     neuron.delta = layer_error * neuron::functions::tanh_derivative(neuron.output);
 
     //     for (std::size_t j {0}; j < neuron.n; j++) {
     //         if (i != std::prev(network.hidden_layers.rend())) {
-    //             const double delta_weight {options.rate * std::next(iter)->neurons[j].output * neuron.delta};
+    //             const double delta_weight {options.learning_rate * std::next(iter)->neurons[j].output * neuron.delta};
     //             neuron.weights[j] += delta_weight;
     //         } else {
-    //             const double delta_weight {options.rate * inputs[j] * 1.0f};  // FIXME
+    //             const double delta_weight {options.learning_rate * inputs[j] * neuron.delta};  // FIXME
     //             neuron.weights[j] += delta_weight;
     //         }
     //     }

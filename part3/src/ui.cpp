@@ -37,7 +37,7 @@ namespace ui {
         static int hidden_layers = 1;
         static std::array<int, 32> hidden_layer_neurons = { 32, 32, 32 };
 
-        bool start = false;
+        bool apply = false;
 
         if (ImGui::Begin("Learning Setup")) {
             ImGui::Text("Inputs: %lu", network.get_inputs());
@@ -72,7 +72,7 @@ namespace ui {
             ImGui::Separator();
             ImGui::Spacing();
 
-            ImGui::InputDouble("Learning rate", &learn.options.rate);
+            ImGui::InputDouble("Learning rate", &learn.options.learning_rate);
             ImGui::InputDouble("Epsilon", &learn.options.epsilon);
             ImGui::InputScalar("Max epochs", ImGuiDataType_U64, &learn.options.max_epochs);
 
@@ -81,7 +81,7 @@ namespace ui {
             ImGui::Spacing();
 
             if (learn.training_set.loaded && learn.training_set.normalized) {
-                if (ImGui::Button("Start")) {
+                if (ImGui::Button("Apply Setup")) {
                     neuron::HiddenLayers layers;
 
                     for (int i = 0; i < hidden_layers; i++) {
@@ -90,7 +90,7 @@ namespace ui {
 
                     network.setup(std::move(layers));
 
-                    start = true;
+                    apply = true;
                 }
             } else {
                 if (ImGui::Button("Choose training set")) {
@@ -101,18 +101,18 @@ namespace ui {
 
         ImGui::End();
 
-        return start;
+        return apply;
     }
 
-    int learning_process(const Learn<6, 1>& learn) {
-        int result {0};
+    Operation learning_process(const Learn<6, 1>& learn) {
+        Operation result = Operation::None;
 
         if (ImGui::Begin("Learning Process")) {
             ImGui::Text("Epoch index: %lu", learn.epoch_index);
             ImGui::Text("Step index: %lu", learn.step_index);
             ImGui::Text("Current error: %f", learn.epoch_error);
             ImGui::Separator();
-            ImGui::Text("Learning rate: %f", learn.options.rate);
+            ImGui::Text("Learning rate: %f", learn.options.learning_rate);
             ImGui::Text("Epsilon: %f", learn.options.epsilon);
             ImGui::Text("Max epochs: %lu", learn.options.max_epochs);
 
@@ -122,11 +122,17 @@ namespace ui {
 
             if (learn.is_running()) {
                 if (ImGui::Button("Stop")) {
-                    result = -1;
+                    result = Operation::Stop;
                 }
             } else {
                 if (ImGui::Button("Start")) {
-                    result = 1;
+                    result = Operation::Start;
+                }
+
+                ImGui::SameLine();
+
+                if (ImGui::Button("Reinitialize")) {
+                    result = Operation::Reinitialize;
                 }
             }
         }

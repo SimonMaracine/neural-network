@@ -9,8 +9,15 @@
 #include "learn.hpp"
 
 namespace ui {
+    enum class Operation {
+        None,
+        Start,
+        Stop,
+        Reinitialize
+    };
+
     bool learning_setup(Learn<6, 1>& learn, neuron::Network<6, 1>& network);
-    int learning_process(const Learn<6, 1>& learn);
+    Operation learning_process(const Learn<6, 1>& learn);
     void learning_graph(const Learn<6, 1>& learn);
     void training_set(TrainingSet& training_set);
     void open_file_browser();

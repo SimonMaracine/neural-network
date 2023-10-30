@@ -21,8 +21,8 @@ struct NnApplication : public gui_base::GuiApplication {
 
     enum class State {
         Setup,
+        ReadyLearning,
         Learning,
-        DoneLearning,
         Testing,
         DoneTesting
     } state = State::Setup;

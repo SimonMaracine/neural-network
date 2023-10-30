@@ -24,28 +24,30 @@ namespace neuron {
             return result;
         }
 
-        constexpr double sigmoid(double x, double theta, double g) {
+        constexpr double sigmoid(double x) {
             constexpr double e = std::numbers::e_v<double>;
             constexpr double one = 1.0;
 
-            return one / (one + std::pow(e, -g * (x - theta)));
+            return one / (one + std::pow(e, -x));
         }
 
         constexpr double sigmoid_derivative(double x) {
             return x * (1.0 - x);
         }
 
-        constexpr double tanh(double x, double theta, double g) {
+        constexpr double tanh(double x) {
             constexpr double e = std::numbers::e_v<double>;
 
-            const double a = std::pow(e, g * (x - theta));
-            const double b = std::pow(e, -g * (x - theta));
+            const double a = std::pow(e, x);
+            const double b = std::pow(e, -x);
 
             return (a - b) / (a + b);
         }
 
         constexpr double tanh_derivative(double x) {
-            return 1.0 - x * x;
+            const double y = tanh(x);
+
+            return 1.0 - y * y;
         }
 
         constexpr double binary(double x) {
@@ -205,14 +207,14 @@ namespace neuron {
     template<std::size_t Inputs, std::size_t Outputs>
     void Network<Inputs, Outputs>::process_neuron_tanh(Neuron& neuron, const double* inputs, std::size_t n) {
         const double global_input = functions::sum(inputs, neuron.weights, n);
-        const double activation = functions::tanh(global_input, 0.0, 1.0);
+        const double activation = functions::tanh(global_input);
         neuron.output = activation;
     }
 
     template<std::size_t Inputs, std::size_t Outputs>
     void Network<Inputs, Outputs>::process_neuron_sigmoid(Neuron& neuron, const double* inputs, std::size_t n) {
         const double global_input = functions::sum(inputs, neuron.weights, n);
-        const double activation = functions::sigmoid(global_input, 0.0, 1.0);
+        const double activation = functions::sigmoid(global_input);
         neuron.output = activation;
     }
 }
