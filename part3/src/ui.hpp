@@ -13,7 +13,8 @@ namespace ui {
         None,
         Start,
         Stop,
-        Reinitialize
+        Reinitialize,
+        Test
     };
 
     bool learning_setup(Learn<6, 1>& learn, neuron::Network<6, 1>& network);
@@ -22,4 +23,5 @@ namespace ui {
     void training_set(TrainingSet& training_set);
     void open_file_browser();
     void file_browser(const std::function<void(const std::string&)>& callback);
+    bool testing(const Learn<6, 1>& learn, const neuron::Network<6, 1>& network);
 }

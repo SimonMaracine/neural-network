@@ -16,6 +16,8 @@
 #include "helpers.hpp"
 
 namespace ui {
+    static constexpr auto RED = ImVec4(0.9f, 0.65f, 0.65f, 1.0f);
+
     static const char* token_to_string(Instance::Token token) {
         switch (token) {
             case Instance::Token::Positive:
@@ -108,9 +110,9 @@ namespace ui {
         Operation result = Operation::None;
 
         if (ImGui::Begin("Learning Process")) {
-            ImGui::Text("Epoch index: %lu", learn.epoch_index);
-            ImGui::Text("Step index: %lu", learn.step_index);
-            ImGui::Text("Current error: %f", learn.epoch_error);
+            ImGui::TextColored(RED, "Epoch index: %lu", learn.epoch_index);
+            ImGui::TextColored(RED, "Step index: %lu", learn.step_index);
+            ImGui::TextColored(RED, "Current error: %f", learn.epoch_error);
             ImGui::Separator();
             ImGui::Text("Learning rate: %f", learn.options.learning_rate);
             ImGui::Text("Epsilon: %f", learn.options.epsilon);
@@ -133,6 +135,12 @@ namespace ui {
 
                 if (ImGui::Button("Reinitialize")) {
                     result = Operation::Reinitialize;
+                }
+
+                ImGui::SameLine();
+
+                if (ImGui::Button("Test")) {
+                    result = Operation::Test;
                 }
             }
         }
@@ -272,5 +280,40 @@ namespace ui {
 
             ImGuiFileDialog::Instance()->Close();
         }
+    }
+
+    bool testing(const Learn<6, 1>& learn, const neuron::Network<6, 1>& network) {
+        bool back = false;
+
+        if (ImGui::Begin("Testing")) {
+            ImGui::Text("Trained for %lu epochs", learn.epoch_index + 1);
+            ImGui::Text("Last epoch error: %f", learn.epoch_error);
+
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+
+            static double test_result {0.0};
+
+            if (ImGui::Button("Test")) {
+                test_result = learn.test(network);
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Go back")) {
+                back = true;
+            }
+
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+
+            ImGui::TextColored(RED, "Test result: %f %%", test_result);
+        }
+
+        ImGui::End();
+
+        return back;
     }
 }

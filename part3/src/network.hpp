@@ -90,7 +90,7 @@ namespace neuron {
     template<std::size_t Inputs, std::size_t Outputs>
     class Network {
     public:
-        void run(const double* inputs, double* outputs);
+        void run(const double* inputs, double* outputs) const;
         void setup(HiddenLayers&& hidden_layers);
         void initialize_neurons();
 
@@ -106,18 +106,18 @@ namespace neuron {
         std::vector<HiddenLayer> hidden_layers;
     private:
         void clear();
-        void allocate_current_inputs(double** inputs, std::size_t* n, const std::vector<Neuron>& neurons);
-        void process_neuron_tanh(Neuron& neuron, const double* inputs, std::size_t n);
-        void process_neuron_sigmoid(Neuron& neuron, const double* inputs, std::size_t n);
+        void allocate_current_inputs(double** inputs, std::size_t* n, const std::vector<Neuron>& neurons) const;
+        void process_neuron_tanh(const Neuron& neuron, const double* inputs, std::size_t n)const ;
+        void process_neuron_sigmoid(const Neuron& neuron, const double* inputs, std::size_t n)const ;
     };
 
     template<std::size_t Inputs, std::size_t Outputs>
-    void Network<Inputs, Outputs>::run(const double* inputs, double* outputs) {
+    void Network<Inputs, Outputs>::run(const double* inputs, double* outputs) const {
         std::size_t i = 0;
 
         auto& layer = hidden_layers[i];
 
-        for (Neuron& neuron : layer.neurons) {
+        for (const Neuron& neuron : layer.neurons) {
             process_neuron_tanh(neuron, inputs, Inputs);
         }
 
@@ -130,14 +130,14 @@ namespace neuron {
         for (; i < hidden_layers.size(); i++) {
             auto& layer = hidden_layers[i];
 
-            for (Neuron& neuron : layer.neurons) {
+            for (const Neuron& neuron : layer.neurons) {
                 process_neuron_tanh(neuron, current_inputs, current_n);
             }
 
             allocate_current_inputs(&current_inputs, &current_n, hidden_layers[i].neurons);
         }
 
-        for (Neuron& neuron : output_layer.neurons) {
+        for (const Neuron& neuron : output_layer.neurons) {
             process_neuron_sigmoid(neuron, current_inputs, current_n);
         }
 
@@ -193,7 +193,7 @@ namespace neuron {
     }
 
     template<std::size_t Inputs, std::size_t Outputs>
-    void Network<Inputs, Outputs>::allocate_current_inputs(double** inputs, std::size_t* n, const std::vector<Neuron>& neurons) {
+    void Network<Inputs, Outputs>::allocate_current_inputs(double** inputs, std::size_t* n, const std::vector<Neuron>& neurons) const {
         delete[] *inputs;
 
         *n = neurons.size();
@@ -205,16 +205,16 @@ namespace neuron {
     }
 
     template<std::size_t Inputs, std::size_t Outputs>
-    void Network<Inputs, Outputs>::process_neuron_tanh(Neuron& neuron, const double* inputs, std::size_t n) {
+    void Network<Inputs, Outputs>::process_neuron_tanh(const Neuron& neuron, const double* inputs, std::size_t n) const {
         const double global_input = functions::sum(inputs, neuron.weights, n);
         const double activation = functions::tanh(global_input);
-        neuron.output = activation;
+        const_cast<Neuron&>(neuron).output = activation;
     }
 
     template<std::size_t Inputs, std::size_t Outputs>
-    void Network<Inputs, Outputs>::process_neuron_sigmoid(Neuron& neuron, const double* inputs, std::size_t n) {
+    void Network<Inputs, Outputs>::process_neuron_sigmoid(const Neuron& neuron, const double* inputs, std::size_t n) const {
         const double global_input = functions::sum(inputs, neuron.weights, n);
         const double activation = functions::sigmoid(global_input);
-        neuron.output = activation;
+        const_cast<Neuron&>(neuron).output = activation;
     }
 }

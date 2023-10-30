@@ -41,10 +41,12 @@ void NnApplication::update() {
 
             if (result == ui::Operation::Start) {
                 learn.reset();
-                learn.start(network);
+                learn.start_learning(network);
                 state = State::Learning;
             } else if (result == ui::Operation::Reinitialize) {
                 network.initialize_neurons();
+            } else if (result == ui::Operation::Test) {
+                state = State::Testing;
             }
 
             ui::learning_graph(learn);
@@ -55,7 +57,7 @@ void NnApplication::update() {
             const auto result = ui::learning_process(learn);
 
             if (result == ui::Operation::Stop) {
-                learn.stop();
+                learn.stop_learning();
                 state = State::ReadyLearning;
             }
 
@@ -68,13 +70,34 @@ void NnApplication::update() {
             break;
         }
         case State::Testing:
-            break;
-        case State::DoneTesting:
+            if (ui::testing(learn, network)) {
+                state = State::ReadyLearning;
+            }
+
             break;
     }
+
+    std::string title {"Neural Network"};
+
+    switch (state) {
+        case State::Setup:
+            title += " - Setup";
+            break;
+        case State::ReadyLearning:
+            title += " - ReadyLearning";
+            break;
+        case State::Learning:
+            title += " - Learning";
+            break;
+        case State::Testing:
+            title += " - Testing";
+            break;
+    }
+
+    set_title(title.c_str());
 }
 
 void NnApplication::dispose() {
-    learn.reset();
+    learn.stop_learning();
     ImPlot::DestroyContext();
 }
