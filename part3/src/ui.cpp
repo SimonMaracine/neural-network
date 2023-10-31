@@ -174,6 +174,9 @@ namespace ui {
 
     void training_set(TrainingSet& training_set) {
         if (ImGui::Begin("Training Set")) {
+            ImGui::Text("%lu/%lu are for training", training_set.training_instance_count, training_set.data.size());
+            ImGui::Spacing();
+
             if (ImGui::Button("Shuffle")) {
                 training_set.shuffle();
             }
