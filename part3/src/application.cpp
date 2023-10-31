@@ -41,7 +41,7 @@ void NnApplication::update() {
 
             if (result == ui::Operation::Start) {
                 learn.reset();
-                learn.start_learning(network);
+                learn.start(network);
                 state = State::Learning;
             } else if (result == ui::Operation::Reinitialize) {
                 network.initialize_neurons();
@@ -57,7 +57,7 @@ void NnApplication::update() {
             const auto result = ui::learning_process(learn);
 
             if (result == ui::Operation::Stop) {
-                learn.stop_learning();
+                learn.stop();
                 state = State::ReadyLearning;
             }
 
@@ -98,6 +98,6 @@ void NnApplication::update() {
 }
 
 void NnApplication::dispose() {
-    learn.stop_learning();
+    learn.stop();
     ImPlot::DestroyContext();
 }

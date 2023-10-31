@@ -12,7 +12,7 @@
 
 #include "helpers.hpp"
 
-namespace neuron {
+namespace network {
     namespace functions {
         constexpr double sum(const double* inputs, const double* weights, std::size_t size) {
             double result = 0.0;

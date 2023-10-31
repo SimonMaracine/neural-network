@@ -35,7 +35,7 @@ namespace ui {
         return nullptr;
     }
 
-    bool learning_setup(Learn<6, 1>& learn, neuron::Network<6, 1>& network) {
+    bool learning_setup(Learn<6, 1>& learn, network::Network<6, 1>& network) {
         static int hidden_layers = 1;
         static std::array<int, 32> hidden_layer_neurons = { 32, 32, 32 };
 
@@ -74,17 +74,9 @@ namespace ui {
             ImGui::Separator();
             ImGui::Spacing();
 
-            ImGui::InputDouble("Learning rate", &learn.options.learning_rate);
-            ImGui::InputDouble("Epsilon", &learn.options.epsilon);
-            ImGui::InputScalar("Max epochs", ImGuiDataType_U64, &learn.options.max_epochs);
-
-            ImGui::Spacing();
-            ImGui::Separator();
-            ImGui::Spacing();
-
             if (learn.training_set.loaded && learn.training_set.normalized) {
                 if (ImGui::Button("Apply Setup")) {
-                    neuron::HiddenLayers layers;
+                    network::HiddenLayers layers;
 
                     for (int i = 0; i < hidden_layers; i++) {
                         layers.layers.push_back(hidden_layer_neurons[i]);
@@ -99,6 +91,14 @@ namespace ui {
                     ui::open_file_browser();
                 }
             }
+
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+
+            ImGui::InputDouble("Learning rate", &learn.options.learning_rate);
+            ImGui::InputDouble("Epsilon", &learn.options.epsilon);
+            ImGui::InputScalar("Max epochs", ImGuiDataType_U64, &learn.options.max_epochs);
         }
 
         ImGui::End();
@@ -110,9 +110,9 @@ namespace ui {
         Operation result = Operation::None;
 
         if (ImGui::Begin("Learning Process")) {
-            ImGui::TextColored(RED, "Epoch index: %lu", learn.epoch_index);
-            ImGui::TextColored(RED, "Step index: %lu", learn.step_index);
-            ImGui::TextColored(RED, "Current error: %f", learn.epoch_error);
+            ImGui::TextColored(RED, "Epoch index: %lu", learn.learning.epoch_index);
+            ImGui::TextColored(RED, "Step index: %lu", learn.learning.step_index);
+            ImGui::TextColored(RED, "Current error: %f", learn.learning.epoch_error);
             ImGui::Separator();
             ImGui::Text("Learning rate: %f", learn.options.learning_rate);
             ImGui::Text("Epsilon: %f", learn.options.epsilon);
@@ -160,9 +160,9 @@ namespace ui {
 
                 ImPlot::PlotLine(
                     "Epoch Error",
-                    learn.error_graph.indices.data(),
-                    learn.error_graph.errors.data(),
-                    static_cast<int>(learn.error_graph.indices.size())
+                    learn.learning.error_graph.indices.data(),
+                    learn.learning.error_graph.errors.data(),
+                    static_cast<int>(learn.learning.error_graph.indices.size())
                 );
 
                 ImPlot::EndPlot();
@@ -282,12 +282,12 @@ namespace ui {
         }
     }
 
-    bool testing(const Learn<6, 1>& learn, const neuron::Network<6, 1>& network) {
+    bool testing(const Learn<6, 1>& learn, const network::Network<6, 1>& network) {
         bool back = false;
 
         if (ImGui::Begin("Testing")) {
-            ImGui::Text("Trained for %lu epochs", learn.epoch_index + 1);
-            ImGui::Text("Last epoch error: %f", learn.epoch_error);
+            ImGui::Text("Trained for %lu epochs", learn.learning.epoch_index + 1);
+            ImGui::Text("Last epoch error: %f", learn.learning.epoch_error);
 
             ImGui::Spacing();
             ImGui::Separator();
@@ -310,6 +310,62 @@ namespace ui {
             ImGui::Spacing();
 
             ImGui::TextColored(RED, "Test result: %f %%", test_result);
+
+            ImGui::Spacing();
+
+            if (ImGui::BeginTable("Tests", 10, ImGuiTableFlags_Borders)) {
+                ImGui::TableSetupColumn("Index");
+                ImGui::TableSetupColumn("Ind risk");
+                ImGui::TableSetupColumn("Man risk");
+                ImGui::TableSetupColumn("Fin flex");
+                ImGui::TableSetupColumn("Cred");
+                ImGui::TableSetupColumn("Comp");
+                ImGui::TableSetupColumn("Oper risk");
+                ImGui::TableSetupColumn("Class");
+                ImGui::TableSetupColumn("Net Output");
+                ImGui::TableSetupColumn("Result");
+                ImGui::TableHeadersRow();
+
+                for (std::size_t i {1}; const Test& test : learn.testing.tests) {
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%lu", i);
+
+                    if (!test.passed) {
+                        ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(45, 45, 55, 255));
+                    }
+
+                    i++;
+
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%f", test.instance.normalized.industrial_risk);
+
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%f", test.instance.normalized.management_risk);
+
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%f", test.instance.normalized.financial_flexibility);
+
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%f", test.instance.normalized.credibility);
+
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%f", test.instance.normalized.competitiveness);
+
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%f", test.instance.normalized.operating_risk);
+
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%f", test.instance.normalized.classification);
+
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%f", test.output);
+
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%s", test.passed ? "pass" : "fail");
+                }
+
+                ImGui::EndTable();
+            }
         }
 
         ImGui::End();

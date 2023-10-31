@@ -15,7 +15,7 @@ struct NnApplication : public gui_base::GuiApplication {
     virtual void update() override;
     virtual void dispose() override;
 
-    neuron::Network<6, 1> network;
+    network::Network<6, 1> network;
 
     Learn<6, 1> learn;
 

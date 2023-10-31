@@ -11,7 +11,7 @@
 #include "helpers.hpp"
 
 struct ErrorGraph {
-    void push(std::size_t index, double error) {
+    void push_back(std::size_t index, double error) {
         errors.push_back(error);
         indices.push_back(static_cast<double>(index));
     }
@@ -25,6 +25,12 @@ struct ErrorGraph {
     std::vector<double> indices;
 };
 
+struct Test {
+    Instance instance;
+    double output {0.0};
+    bool passed {false};
+};
+
 template<std::size_t Inputs, std::size_t Outputs>
 class Learn {
 public:
@@ -34,39 +40,46 @@ public:
         unsigned long max_epochs {100'000};
     } options;
 
-    unsigned long epoch_index {0};
-    std::size_t step_index {0};
-    double epoch_error {1.0};
-    std::vector<double> step_errors;
+    struct {
+        unsigned long epoch_index {0};
+        std::size_t step_index {0};
+        double epoch_error {1.0};
 
-    ErrorGraph error_graph;
+        std::vector<double> step_errors;
+        ErrorGraph error_graph;
+    } learning;
+
+    mutable struct {
+        std::vector<Test> tests;
+    } testing;
 
     TrainingSet training_set;
 
-    void start_learning(neuron::Network<Inputs, Outputs>& network);
-    void stop_learning();
+    void start(network::Network<Inputs, Outputs>& network);
+    void stop();
     void reset();
-    double test(const neuron::Network<Inputs, Outputs>& network) const;
+    double test(const network::Network<Inputs, Outputs>& network) const;
     bool is_running() const { return running; }
 private:
-    bool running = false;
-
-    mutable std::array<double, Inputs> inputs {};
-    mutable std::array<double, Outputs> outputs {};
-    mutable std::array<double, Outputs> expected_outputs {};
+    mutable struct {
+        std::array<double, Inputs> inputs {};
+        std::array<double, Outputs> outputs {};
+        std::array<double, Outputs> expected_outputs {};
+    } data;
 
     std::thread thread;
+    bool running = false;
 
     // Return true when it should stop
-    bool update(neuron::Network<Inputs, Outputs>& network);
+    bool update(network::Network<Inputs, Outputs>& network);
     static double calculate_step_error(double* outputs, double* expected_outputs);
     static double calculate_error_testing(double* outputs, double* expected_outputs);
-    double calculate_epoch_error();
-    void backpropagation(double* outputs, double* expected_outputs, neuron::Network<Inputs, Outputs>& network);
+    static double calculate_epoch_error(const std::vector<double>& step_errors);
+    void backpropagation(double* outputs, double* expected_outputs, network::Network<Inputs, Outputs>& network) const;
 };
 
 template<std::size_t Inputs, std::size_t Outputs>
-void Learn<Inputs, Outputs>::start_learning(neuron::Network<Inputs, Outputs>& network) {
+void Learn<Inputs, Outputs>::start(network::Network<Inputs, Outputs>& network) {
     thread = std::thread([this, &network]() {
         running = true;
 
@@ -81,7 +94,7 @@ void Learn<Inputs, Outputs>::start_learning(neuron::Network<Inputs, Outputs>& ne
 }
 
 template<std::size_t Inputs, std::size_t Outputs>
-void Learn<Inputs, Outputs>::stop_learning() {
+void Learn<Inputs, Outputs>::stop() {
     running = false;
 
     if (thread.joinable()) {
@@ -91,42 +104,47 @@ void Learn<Inputs, Outputs>::stop_learning() {
 
 template<std::size_t Inputs, std::size_t Outputs>
 void Learn<Inputs, Outputs>::reset() {
-    stop_learning();
+    stop();
 
-    epoch_index = 0;
-    step_index = 0;
-    epoch_error = 1.0;
-    error_graph.clear();
-    inputs = {};
-    outputs = {};
-    expected_outputs = {};
+    learning.epoch_index = 0;
+    learning.step_index = 0;
+    learning.epoch_error = 1.0;
+    learning.step_errors.clear();
+    learning.error_graph.clear();
 }
 
 template<std::size_t Inputs, std::size_t Outputs>
-double Learn<Inputs, Outputs>::test(const neuron::Network<Inputs, Outputs>& network) const {
-    const double threshold = 0.01;
+double Learn<Inputs, Outputs>::test(const network::Network<Inputs, Outputs>& network) const {
+    testing.tests.clear();
 
     std::size_t passed {0};
 
     for (std::size_t i {training_set.training_instance_count}; i < training_set.data.size(); i++) {
         const auto& instance = training_set.data[i];
 
-        inputs[0] = instance.normalized.industrial_risk;
-        inputs[1] = instance.normalized.management_risk;
-        inputs[2] = instance.normalized.financial_flexibility;
-        inputs[3] = instance.normalized.credibility;
-        inputs[4] = instance.normalized.competitiveness;
-        inputs[5] = instance.normalized.operating_risk;
-        expected_outputs[0] = instance.normalized.classification;
+        data.inputs[0] = instance.normalized.industrial_risk;
+        data.inputs[1] = instance.normalized.management_risk;
+        data.inputs[2] = instance.normalized.financial_flexibility;
+        data.inputs[3] = instance.normalized.credibility;
+        data.inputs[4] = instance.normalized.competitiveness;
+        data.inputs[5] = instance.normalized.operating_risk;
+        data.expected_outputs[0] = instance.normalized.classification;
 
-        network.run(inputs.data(), outputs.data());
+        network.run(data.inputs.data(), data.outputs.data());
 
-        // Do the test
-        const double error = calculate_error_testing(outputs.data(), expected_outputs.data());
+        // The error for this specific network is either 0 or 1
+        const double error = calculate_error_testing(data.outputs.data(), data.expected_outputs.data());
 
-        if (error < threshold) {
+        Test test;
+        test.instance = instance;
+        test.output = data.outputs[0];
+
+        if (error == 0.0) {
             passed++;
+            test.passed = true;
         }
+
+        testing.tests.push_back(test);
     }
 
     const std::size_t testing_instance_count {training_set.data.size() - training_set.training_instance_count};
@@ -135,46 +153,46 @@ double Learn<Inputs, Outputs>::test(const neuron::Network<Inputs, Outputs>& netw
 }
 
 template<std::size_t Inputs, std::size_t Outputs>
-bool Learn<Inputs, Outputs>::update(neuron::Network<Inputs, Outputs>& network) {
-    if (epoch_index == options.max_epochs || epoch_error < options.epsilon) {
+bool Learn<Inputs, Outputs>::update(network::Network<Inputs, Outputs>& network) {
+    if (learning.epoch_index == options.max_epochs || learning.epoch_error < options.epsilon) {
         return true;
     }
 
     // Retrieve training set instance
-    const auto& instance = training_set.data[step_index];
+    const auto& instance = training_set.data[learning.step_index];
 
     // Setup inputs and expected outputs
-    inputs[0] = instance.normalized.industrial_risk;
-    inputs[1] = instance.normalized.management_risk;
-    inputs[2] = instance.normalized.financial_flexibility;
-    inputs[3] = instance.normalized.credibility;
-    inputs[4] = instance.normalized.competitiveness;
-    inputs[5] = instance.normalized.operating_risk;
-    expected_outputs[0] = instance.normalized.classification;
+    data.inputs[0] = instance.normalized.industrial_risk;
+    data.inputs[1] = instance.normalized.management_risk;
+    data.inputs[2] = instance.normalized.financial_flexibility;
+    data.inputs[3] = instance.normalized.credibility;
+    data.inputs[4] = instance.normalized.competitiveness;
+    data.inputs[5] = instance.normalized.operating_risk;
+    data.expected_outputs[0] = instance.normalized.classification;
 
     // Forward pass
-    network.run(inputs.data(), outputs.data());
+    network.run(data.inputs.data(), data.outputs.data());
 
     // Calculate error
-    const double error = calculate_step_error(outputs.data(), expected_outputs.data());
-    step_errors.push_back(error);
+    const double error = calculate_step_error(data.outputs.data(), data.expected_outputs.data());
+    learning.step_errors.push_back(error);
 
     // Learning pass
-    backpropagation(outputs.data(), expected_outputs.data(), network);
+    backpropagation(data.outputs.data(), data.expected_outputs.data(), network);
 
     // Next training set instance
-    step_index++;
+    learning.step_index++;
 
-    if (step_index == training_set.training_instance_count) {
+    if (learning.step_index == training_set.training_instance_count) {
         // Next epoch
 
-        epoch_error = calculate_epoch_error();
-        step_errors.clear();
+        learning.epoch_error = calculate_epoch_error(learning.step_errors);
+        learning.step_errors.clear();
 
-        error_graph.push(epoch_index, epoch_error);
+        learning.error_graph.push_back(learning.epoch_index, learning.epoch_error);
 
-        epoch_index++;
-        step_index = 0;
+        learning.epoch_index++;
+        learning.step_index = 0;
     }
 
     return false;
@@ -193,11 +211,11 @@ double Learn<Inputs, Outputs>::calculate_step_error(double* outputs, double* exp
 }
 
 template<std::size_t Inputs, std::size_t Outputs>
-double Learn<Inputs, Outputs>::calculate_error_testing(double* outputs, double* expected_outputs) {  // FIXME wrong
+double Learn<Inputs, Outputs>::calculate_error_testing(double* outputs, double* expected_outputs) {
     double error_sum {0.0};
 
     for (std::size_t i {0}; i < Outputs; i++) {
-        const double error = std::abs(outputs[i] - expected_outputs[i]);
+        const double error = std::abs(network::functions::binary(outputs[i]) - expected_outputs[i]);
         error_sum += error;
     }
 
@@ -205,7 +223,7 @@ double Learn<Inputs, Outputs>::calculate_error_testing(double* outputs, double* 
 }
 
 template<std::size_t Inputs, std::size_t Outputs>
-double Learn<Inputs, Outputs>::calculate_epoch_error() {
+double Learn<Inputs, Outputs>::calculate_epoch_error(const std::vector<double>& step_errors) {
     double result_error {0.0};
 
     for (const double error : step_errors) {
@@ -218,14 +236,14 @@ double Learn<Inputs, Outputs>::calculate_epoch_error() {
 }
 
 template<std::size_t Inputs, std::size_t Outputs>
-void Learn<Inputs, Outputs>::backpropagation(double* outputs, double* expected_outputs, neuron::Network<Inputs, Outputs>& network) {
+void Learn<Inputs, Outputs>::backpropagation(double* outputs, double* expected_outputs, network::Network<Inputs, Outputs>& network) const {
     // Output layer
     for (std::size_t i {0}; i < Outputs; i++) {
-        neuron::Neuron& neuron {network.output_layer.neurons[i]};
+        network::Neuron& neuron {network.output_layer.neurons[i]};
 
         const double layer_error {outputs[i] - expected_outputs[i]};
 
-        neuron.delta = layer_error * neuron::functions::sigmoid_derivative(outputs[i]);
+        neuron.delta = layer_error * network::functions::sigmoid_derivative(outputs[i]);
 
         for (std::size_t j {0}; j < neuron.n; j++) {
             auto& last_hidden_layer {network.hidden_layers[network.hidden_layers.size() - 1]};
@@ -241,29 +259,29 @@ void Learn<Inputs, Outputs>::backpropagation(double* outputs, double* expected_o
         const bool is_first_hidden_layer {iter == std::prev(network.hidden_layers.rend())};
 
         for (std::size_t i {0}; i < iter->neurons.size(); i++) {
-            neuron::Neuron& neuron {iter->neurons[i]};
+            network::Neuron& neuron {iter->neurons[i]};
 
             double layer_error {0.0};
 
             if (is_last_hidden_layer) {
                 for (auto iter2 = network.output_layer.neurons.begin(); iter2 != network.output_layer.neurons.end(); iter2++) {
-                    neuron::Neuron& neuron {*iter2};
+                    network::Neuron& neuron {*iter2};
 
                     layer_error += neuron.weights[i] * neuron.delta;
                 }
             } else {
                 for (auto iter2 = std::prev(iter)->neurons.begin(); iter2 != std::prev(iter)->neurons.end(); iter2++) {
-                    neuron::Neuron& neuron {*iter2};
+                    network::Neuron& neuron {*iter2};
 
                     layer_error += neuron.weights[i] * neuron.delta;
                 }
             }
 
-            neuron.delta = layer_error * neuron::functions::tanh_derivative(neuron.output);
+            neuron.delta = layer_error * network::functions::tanh_derivative(neuron.output);
 
             if (is_first_hidden_layer) {
                 for (std::size_t j {0}; j < neuron.n; j++) {
-                    const double change {options.learning_rate * inputs[j] * neuron.delta};
+                    const double change {options.learning_rate * data.inputs[j] * neuron.delta};
                     neuron.weights[j] -= change;
                 }
             } else {
