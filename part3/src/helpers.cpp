@@ -64,7 +64,7 @@ void reallocate_double_array_random(double** array, std::size_t* old_size, std::
     }
 }
 
-bool TrainingSet::load(std::string_view file_name) {
+bool TrainingSet::load(std::string_view file_name, float percent_for_testing) {
     std::ifstream stream {std::string(file_name)};
 
     if (!stream.is_open()) {
@@ -120,6 +120,8 @@ bool TrainingSet::load(std::string_view file_name) {
     }
 
     loaded = true;
+
+    set_testing(percent_for_testing);
 
     return true;
 }

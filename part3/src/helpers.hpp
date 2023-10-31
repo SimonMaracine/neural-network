@@ -44,7 +44,7 @@ struct TrainingSet {
     bool normalized = false;
     std::size_t training_instance_count {0};
 
-    bool load(std::string_view file_name);
+    bool load(std::string_view file_name, float percent_for_testing);
     void shuffle();
     void normalize();
     void set_testing(float percent_for_testing);
