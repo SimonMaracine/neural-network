@@ -331,8 +331,8 @@ namespace ui {
 
             if (ImGui::BeginTable("Tests", 22, ImGuiTableFlags_Borders)) {
                 ImGui::TableSetupColumn("Index");
-                ImGui::TableSetupColumn("OUTPUT");
                 ImGui::TableSetupColumn("RESULT");
+                ImGui::TableSetupColumn("OUTPUT");
                 ImGui::TableSetupColumn("Class");
                 ImGui::TableSetupColumn("X1");
                 ImGui::TableSetupColumn("X2");
