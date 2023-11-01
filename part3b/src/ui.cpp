@@ -156,6 +156,11 @@ namespace ui {
     }
 
     void training_set(TrainingSet& training_set) {
+        static constexpr int MAX_GROUP = 9;
+        static int group = 0;
+
+        const std::size_t group_size = training_set.data.size() / (MAX_GROUP + 1);
+
         if (ImGui::Begin("Training Set")) {
             ImGui::Text("%lu/%lu are for training", training_set.training_instance_count, training_set.data.size());
             ImGui::Spacing();
@@ -168,6 +173,18 @@ namespace ui {
 
             if (ImGui::Button("Normalize")) {
                 training_set.normalize();
+            }
+
+            ImGui::Spacing();
+
+            if (ImGui::SmallButton("<")) {
+                group = std::max(group - 1, 0);
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::SmallButton(">")) {
+                group = std::min(group + 1, MAX_GROUP);
             }
 
             ImGui::Spacing();
@@ -195,7 +212,12 @@ namespace ui {
                 ImGui::TableSetupColumn("Total operating expenses");
                 ImGui::TableHeadersRow();
 
-                for (std::size_t i {1}; const Instance& instance : training_set.data) {
+                const std::size_t begin {group * group_size};
+                const std::size_t end {group == MAX_GROUP ? training_set.data.size() : (group + 1) * group_size};
+
+                for (std::size_t i {1}, j {begin}; j < end; j++) {
+                    const Instance& instance = training_set.data[j];
+
                     ImGui::TableNextColumn();
                     ImGui::Text("%lu", i);
 

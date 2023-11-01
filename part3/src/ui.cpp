@@ -325,8 +325,8 @@ namespace ui {
                 ImGui::TableSetupColumn("Comp");
                 ImGui::TableSetupColumn("Oper risk");
                 ImGui::TableSetupColumn("Class");
-                ImGui::TableSetupColumn("Net Output");
-                ImGui::TableSetupColumn("Result");
+                ImGui::TableSetupColumn("OUTPUT");
+                ImGui::TableSetupColumn("RESULT");
                 ImGui::TableHeadersRow();
 
                 for (std::size_t i {1}; const Test& test : learn.testing.tests) {

@@ -42,11 +42,7 @@ static constexpr double map(double x, double in_min, double in_max, double out_m
 }
 
 static bool check_line(const std::string& line) {
-    // std::regex pattern {"^([PAN],){6}(B|NB)$"};  // FIXME
-
-    // return std::regex_match(line.cbegin(), line.cend(), pattern);
-
-    return true;
+    return line.find("company_name,status_label,year,X1,X2,X3,X4,X5,X6,X7,X8,X9,X10,X11,X12,X13,X14,X15,X16,X17,X18");
 }
 
 void reallocate_double_array_random(double** array, std::size_t* old_size, std::size_t size) {
@@ -76,6 +72,12 @@ bool TrainingSet::load(std::string_view file_name, float percent_for_testing) {
         return false;
     }
 
+    if (!check_line(line)) {
+        loaded = false;
+
+        return false;
+    }
+
     while (true) {
         if (!std::getline(stream, line)) {
             break;
@@ -83,22 +85,14 @@ bool TrainingSet::load(std::string_view file_name, float percent_for_testing) {
 
         Instance instance;
 
-        std::string string = line;
-
-        if (string[string.size() - 1] == '\r') {
-            string.pop_back();
-        }
-
-        if (!check_line(string)) {
-            loaded = false;
-
-            return false;
+        if (line[line.size() - 1] == '\r') {
+            line.pop_back();
         }
 
         char* token {nullptr};
         std::optional<double> value;
 
-        token = std::strtok(string.data(), ",");
+        token = std::strtok(line.data(), ",");
         // Skip name
 
         token = std::strtok(nullptr, ",");
