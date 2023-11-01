@@ -14,7 +14,8 @@ namespace ui {
         Start,
         Stop,
         Reinitialize,
-        Test
+        Test,
+        Execute,
     };
 
     bool learning_setup(Learn<18, 1>& learn, network::Network<18, 1>& network);
@@ -24,4 +25,5 @@ namespace ui {
     void open_file_browser();
     void file_browser(const std::function<void(const std::string&)>& callback);
     bool testing(const Learn<18, 1>& learn, const network::Network<18, 1>& network);
+    bool executing(const network::Network<18, 1>& network);
 }

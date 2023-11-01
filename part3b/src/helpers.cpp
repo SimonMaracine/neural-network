@@ -45,17 +45,6 @@ static bool check_line(const std::string& line) {
     return line.find("company_name,status_label,year,X1,X2,X3,X4,X5,X6,X7,X8,X9,X10,X11,X12,X13,X14,X15,X16,X17,X18");
 }
 
-void reallocate_double_array_random(double** array, std::size_t* old_size, std::size_t size) {
-    delete[] *array;
-    *array = new double[size];
-    *old_size = size;
-
-    for (std::size_t i {0}; i < size; i++) {
-        const double normalized {static_cast<double>(std::rand()) / static_cast<double>(RAND_MAX)};
-        (*array)[i] = normalized * 2.0f - 1.0f;
-    }
-}
-
 bool TrainingSet::load(std::string_view file_name, float percent_for_testing) {
     std::ifstream stream {std::string(file_name)};
 
@@ -279,24 +268,7 @@ void TrainingSet::normalize() {
     }
 
     for (Instance& instance : data) {
-        instance.current_assets =                     map(instance.current_assets, -7.76, 170'000.0, 0.0, 1.0);
-        instance.cost_of_goods_sold =                 map(instance.cost_of_goods_sold, -367.0, 375'000.0, 0.0, 1.0);
-        instance.depreciation_and_amortization =      map(instance.depreciation_and_amortization, 0.0, 28'400.0, 0.0, 1.0);
-        instance.financial_performance =              map(instance.financial_performance, -21'900.0, 81'700.0, 0.0, 1.0);
-        instance.inventory =                          map(instance.inventory, 0.0, 62'600.0, 0.0, 1.0);
-        instance.net_income =                         map(instance.net_income, -98'700.0, 105'000.0, 0.0, 1.0);
-        instance.total_receivables =                  map(instance.total_receivables, -0.01, 65'800.0, 0.0, 1.0);
-        instance.market_value =                       map(instance.market_value, 0.0, 1'070'000.0, 0.0, 1.0);
-        instance.net_sales =                          map(instance.net_sales, -1'960.0, 512'000.0, 0.0, 1.0);
-        instance.total_assets =                       map(instance.total_assets, 0.0, 532'000.0, 0.0, 1.0);
-        instance.total_long_term_debt =               map(instance.total_long_term_debt, -0.02, 166'000.0, 0.0, 1.0);
-        instance.earnings_before_interest_and_taxes = map(instance.earnings_before_interest_and_taxes, -25'900.0, 71'200.0, 0.0, 1.0);
-        instance.gross_profit =                       map(instance.gross_profit, -21'500.0, 137'000.0, 0.0, 1.0);
-        instance.total_current_liabilities =          map(instance.total_current_liabilities, 0.0, 117'000.0, 0.0, 1.0);
-        instance.retained_earnings =                  map(instance.retained_earnings, -102'000.0, 402'000.0, 0.0, 1.0);
-        instance.total_revenue =                      map(instance.total_revenue, -1'960.0, 512'000.0, 0.0, 1.0);
-        instance.total_liabilities =                  map(instance.total_liabilities, 0.0, 338'000.0, 0.0, 1.0);
-        instance.total_operating_expenses =           map(instance.total_operating_expenses, -317.0, 482'000.0, 0.0, 1.0);
+        normalize_instance(instance);
     }
 
     normalized = true;
@@ -307,4 +279,36 @@ void TrainingSet::set_testing(float percent_for_testing) {
 
     const double instances_for_testing {(static_cast<double>(data.size()) * percent_for_testing) / 100.0f};
     training_instance_count = data.size() - static_cast<std::size_t>(instances_for_testing);
+}
+
+void normalize_instance(Instance& instance) {
+    instance.current_assets =                     map(instance.current_assets, -7.76, 170'000.0, 0.0, 1.0);
+    instance.cost_of_goods_sold =                 map(instance.cost_of_goods_sold, -367.0, 375'000.0, 0.0, 1.0);
+    instance.depreciation_and_amortization =      map(instance.depreciation_and_amortization, 0.0, 28'400.0, 0.0, 1.0);
+    instance.financial_performance =              map(instance.financial_performance, -21'900.0, 81'700.0, 0.0, 1.0);
+    instance.inventory =                          map(instance.inventory, 0.0, 62'600.0, 0.0, 1.0);
+    instance.net_income =                         map(instance.net_income, -98'700.0, 105'000.0, 0.0, 1.0);
+    instance.total_receivables =                  map(instance.total_receivables, -0.01, 65'800.0, 0.0, 1.0);
+    instance.market_value =                       map(instance.market_value, 0.0, 1'070'000.0, 0.0, 1.0);
+    instance.net_sales =                          map(instance.net_sales, -1'960.0, 512'000.0, 0.0, 1.0);
+    instance.total_assets =                       map(instance.total_assets, 0.0, 532'000.0, 0.0, 1.0);
+    instance.total_long_term_debt =               map(instance.total_long_term_debt, -0.02, 166'000.0, 0.0, 1.0);
+    instance.earnings_before_interest_and_taxes = map(instance.earnings_before_interest_and_taxes, -25'900.0, 71'200.0, 0.0, 1.0);
+    instance.gross_profit =                       map(instance.gross_profit, -21'500.0, 137'000.0, 0.0, 1.0);
+    instance.total_current_liabilities =          map(instance.total_current_liabilities, 0.0, 117'000.0, 0.0, 1.0);
+    instance.retained_earnings =                  map(instance.retained_earnings, -102'000.0, 402'000.0, 0.0, 1.0);
+    instance.total_revenue =                      map(instance.total_revenue, -1'960.0, 512'000.0, 0.0, 1.0);
+    instance.total_liabilities =                  map(instance.total_liabilities, 0.0, 338'000.0, 0.0, 1.0);
+    instance.total_operating_expenses =           map(instance.total_operating_expenses, -317.0, 482'000.0, 0.0, 1.0);
+}
+
+void reallocate_double_array_random(double** array, std::size_t* old_size, std::size_t size) {
+    delete[] *array;
+    *array = new double[size];
+    *old_size = size;
+
+    for (std::size_t i {0}; i < size; i++) {
+        const double normalized {static_cast<double>(std::rand()) / static_cast<double>(RAND_MAX)};
+        (*array)[i] = normalized * 2.0f - 1.0f;
+    }
 }

@@ -23,6 +23,7 @@ struct NnApplication : public gui_base::GuiApplication {
         Setup,
         ReadyLearning,
         Learning,
-        Testing
+        Testing,
+        Executing
     } state = State::Setup;
 };

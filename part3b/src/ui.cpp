@@ -125,6 +125,12 @@ namespace ui {
                 if (ImGui::Button("Test")) {
                     result = Operation::Test;
                 }
+
+                ImGui::SameLine();
+
+                if (ImGui::Button("Execute")) {
+                    result = Operation::Execute;
+                }
             }
         }
 
@@ -451,6 +457,98 @@ namespace ui {
                 }
 
                 ImGui::EndTable();
+            }
+        }
+
+        ImGui::End();
+
+        return back;
+    }
+
+    bool executing(const network::Network<18, 1>& network) {
+        static std::array<double, 18> user_inputs {};
+        static std::array<double, 18> inputs {};
+        static std::array<double, 1> outputs {};
+
+        bool back = false;
+
+        if (ImGui::Begin("Executing")) {
+            ImGui::InputDouble("Current assets", user_inputs.data() + 0);
+            ImGui::InputDouble("Cost of goods sold", user_inputs.data() + 1);
+            ImGui::InputDouble("Depreciation and amortization", user_inputs.data() + 2);
+            ImGui::InputDouble("Financial performance", user_inputs.data() + 3);
+            ImGui::InputDouble("Inventory", user_inputs.data() + 4);
+            ImGui::InputDouble("Net income", user_inputs.data() + 5);
+            ImGui::InputDouble("Total receivables", user_inputs.data() + 6);
+            ImGui::InputDouble("Market value", user_inputs.data() + 7);
+            ImGui::InputDouble("Net sales", user_inputs.data() + 8);
+            ImGui::InputDouble("Total assets", user_inputs.data() + 9);
+            ImGui::InputDouble("Total long-term debt", user_inputs.data() + 10);
+            ImGui::InputDouble("EBIT", user_inputs.data() + 11);
+            ImGui::InputDouble("Gross profit", user_inputs.data() + 12);
+            ImGui::InputDouble("Total current liabilities", user_inputs.data() + 13);
+            ImGui::InputDouble("Retained earnings", user_inputs.data() + 14);
+            ImGui::InputDouble("Total revenue", user_inputs.data() + 15);
+            ImGui::InputDouble("Total liabilities", user_inputs.data() + 16);
+            ImGui::InputDouble("Total operating expenses", user_inputs.data() + 17);
+
+            ImGui::Spacing();
+
+            const char* result = network::functions::binary(outputs[0]) == 1.0 ? "alive" : "failed";
+
+            ImGui::TextColored(RED, "Result: %f (%s)", outputs[0], result);
+
+            ImGui::Spacing();
+
+            if (ImGui::Button("Execute")) {
+                Instance instance;
+                instance.current_assets = user_inputs[0];
+                instance.cost_of_goods_sold = user_inputs[1];
+                instance.depreciation_and_amortization = user_inputs[2];
+                instance.financial_performance = user_inputs[3];
+                instance.inventory = user_inputs[4];
+                instance.net_income = user_inputs[5];
+                instance.total_receivables = user_inputs[6];
+                instance.market_value = user_inputs[7];
+                instance.net_sales = user_inputs[8];
+                instance.total_assets = user_inputs[9];
+                instance.total_long_term_debt = user_inputs[10];
+                instance.earnings_before_interest_and_taxes = user_inputs[11];
+                instance.gross_profit = user_inputs[12];
+                instance.total_current_liabilities = user_inputs[13];
+                instance.retained_earnings = user_inputs[14];
+                instance.total_revenue = user_inputs[15];
+                instance.total_liabilities = user_inputs[16];
+                instance.total_operating_expenses = user_inputs[17];
+
+                normalize_instance(instance);
+
+                inputs[0] = instance.current_assets;
+                inputs[1] = instance.cost_of_goods_sold;
+                inputs[2] = instance.depreciation_and_amortization;
+                inputs[3] = instance.financial_performance;
+                inputs[4] = instance.inventory;
+                inputs[5] = instance.net_income;
+                inputs[6] = instance.total_receivables;
+                inputs[7] = instance.market_value;
+                inputs[8] = instance.net_sales;
+                inputs[9] = instance.total_assets;
+                inputs[10] = instance.total_long_term_debt;
+                inputs[11] = instance.earnings_before_interest_and_taxes;
+                inputs[12] = instance.gross_profit;
+                inputs[13] = instance.total_current_liabilities;
+                inputs[14] = instance.retained_earnings;
+                inputs[15] = instance.total_revenue;
+                inputs[16] = instance.total_liabilities;
+                inputs[17] = instance.total_operating_expenses;
+
+                network.run(inputs.data(), outputs.data());
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Go back")) {
+                back = true;
             }
         }
 

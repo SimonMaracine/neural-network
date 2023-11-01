@@ -39,4 +39,5 @@ struct TrainingSet {
     void set_testing(float percent_for_testing);
 };
 
+void normalize_instance(Instance& instance);
 void reallocate_double_array_random(double** array, std::size_t* old_size, std::size_t size);

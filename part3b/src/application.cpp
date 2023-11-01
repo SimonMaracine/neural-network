@@ -45,6 +45,8 @@ void NnApplication::update() {
                 network.initialize_neurons();
             } else if (result == ui::Operation::Test) {
                 state = State::Testing;
+            } else if (result == ui::Operation::Execute) {
+                state = State::Executing;
             }
 
             ui::learning_graph(learn);
@@ -73,6 +75,12 @@ void NnApplication::update() {
             }
 
             break;
+        case State::Executing:
+            if (ui::executing(network)) {
+                state = State::ReadyLearning;
+            }
+
+            break;
     }
 
     std::string title {"Neural Network"};
@@ -89,6 +97,9 @@ void NnApplication::update() {
             break;
         case State::Testing:
             title += " - Testing";
+            break;
+        case State::Executing:
+            title += " - Executing";
             break;
     }
 
