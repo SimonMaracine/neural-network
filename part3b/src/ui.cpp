@@ -473,24 +473,152 @@ namespace ui {
         bool back = false;
 
         if (ImGui::Begin("Executing")) {
+            ImGui::Text("All the attributes represent sums of money");
+            ImGui::Spacing();
+
             ImGui::InputDouble("Current assets", user_inputs.data() + 0);
+            if (ImGui::IsItemHovered()) {
+                if (ImGui::BeginTooltip()) {
+                    ImGui::Text("All the assets of a company that are expected to be sold or used as a result of standard business operations over the next year");
+                    ImGui::EndTooltip();
+                }
+            }
+
             ImGui::InputDouble("Cost of goods sold", user_inputs.data() + 1);
+            if (ImGui::IsItemHovered()) {
+                if (ImGui::BeginTooltip()) {
+                    ImGui::Text("The total amount a company paid as a cost directly related to the sale of products");
+                    ImGui::EndTooltip();
+                }
+            }
+
             ImGui::InputDouble("Depreciation and amortization", user_inputs.data() + 2);
+            if (ImGui::IsItemHovered()) {
+                if (ImGui::BeginTooltip()) {
+                    ImGui::Text("Depreciation refers to the loss of value of a tangible fixed asset over time (such as property, machinery, buildings, and plant); amortization refers to the loss of value of intangible assets over time");
+                    ImGui::EndTooltip();
+                }
+            }
+
             ImGui::InputDouble("Financial performance", user_inputs.data() + 3);
+            if (ImGui::IsItemHovered()) {
+                if (ImGui::BeginTooltip()) {
+                    ImGui::Text("It is a measure of a company's overall financial performance, serving as an alternative to net income");
+                    ImGui::EndTooltip();
+                }
+            }
+
             ImGui::InputDouble("Inventory", user_inputs.data() + 4);
+            if (ImGui::IsItemHovered()) {
+                if (ImGui::BeginTooltip()) {
+                    ImGui::Text("The accounting of items and raw materials that a company either uses in production or sells");
+                    ImGui::EndTooltip();
+                }
+            }
+
             ImGui::InputDouble("Net income", user_inputs.data() + 5);
+            if (ImGui::IsItemHovered()) {
+                if (ImGui::BeginTooltip()) {
+                    ImGui::Text("The overall profitability of a company after all expenses and costs have been deducted from total revenue");
+                    ImGui::EndTooltip();
+                }
+            }
+
             ImGui::InputDouble("Total receivables", user_inputs.data() + 6);
+            if (ImGui::IsItemHovered()) {
+                if (ImGui::BeginTooltip()) {
+                    ImGui::Text("The balance of money due to a firm for goods or services delivered or used but not yet paid for by customers");
+                    ImGui::EndTooltip();
+                }
+            }
+
             ImGui::InputDouble("Market value", user_inputs.data() + 7);
+            if (ImGui::IsItemHovered()) {
+                if (ImGui::BeginTooltip()) {
+                    ImGui::Text("The price of an asset in a marketplace. In this dataset, it refers to the market capitalization since companies are publicly traded in the stock market");
+                    ImGui::EndTooltip();
+                }
+            }
+
             ImGui::InputDouble("Net sales", user_inputs.data() + 8);
+            if (ImGui::IsItemHovered()) {
+                if (ImGui::BeginTooltip()) {
+                    ImGui::Text("The sum of a company's gross sales minus its returns, allowances, and discounts");
+                    ImGui::EndTooltip();
+                }
+            }
+
             ImGui::InputDouble("Total assets", user_inputs.data() + 9);
+            if (ImGui::IsItemHovered()) {
+                if (ImGui::BeginTooltip()) {
+                    ImGui::Text("All the assets, or items of value, a business owns");
+                    ImGui::EndTooltip();
+                }
+            }
+
             ImGui::InputDouble("Total long-term debt", user_inputs.data() + 10);
+            if (ImGui::IsItemHovered()) {
+                if (ImGui::BeginTooltip()) {
+                    ImGui::Text("A company's loans and other liabilities that will not become due within one year of the balance sheet date");
+                    ImGui::EndTooltip();
+                }
+            }
+
             ImGui::InputDouble("EBIT", user_inputs.data() + 11);
+            if (ImGui::IsItemHovered()) {
+                if (ImGui::BeginTooltip()) {
+                    ImGui::Text("Earnings before interest and taxes");
+                    ImGui::EndTooltip();
+                }
+            }
+
             ImGui::InputDouble("Gross profit", user_inputs.data() + 12);
+            if (ImGui::IsItemHovered()) {
+                if (ImGui::BeginTooltip()) {
+                    ImGui::Text("The profit a business makes after subtracting all the costs that are related to manufacturing and selling its products or services");
+                    ImGui::EndTooltip();
+                }
+            }
+
             ImGui::InputDouble("Total current liabilities", user_inputs.data() + 13);
+            if (ImGui::IsItemHovered()) {
+                if (ImGui::BeginTooltip()) {
+                    ImGui::Text("The sum of accounts payable, accrued liabilities, and taxes such as Bonds payable at the end of the year, salaries, and commissions remaining");
+                    ImGui::EndTooltip();
+                }
+            }
+
             ImGui::InputDouble("Retained earnings", user_inputs.data() + 14);
+            if (ImGui::IsItemHovered()) {
+                if (ImGui::BeginTooltip()) {
+                    ImGui::Text("The amount of profit a company has left over after paying all its direct costs, indirect costs, income taxes, and its dividends to shareholders");
+                    ImGui::EndTooltip();
+                }
+            }
+
             ImGui::InputDouble("Total revenue", user_inputs.data() + 15);
+            if (ImGui::IsItemHovered()) {
+                if (ImGui::BeginTooltip()) {
+                    ImGui::Text("The amount of income that a business has made from all sales before subtracting expenses; it may include interest and dividends from investments");
+                    ImGui::EndTooltip();
+                }
+            }
+
             ImGui::InputDouble("Total liabilities", user_inputs.data() + 16);
+            if (ImGui::IsItemHovered()) {
+                if (ImGui::BeginTooltip()) {
+                    ImGui::Text("The combined debts and obligations that the company owes to outside parties");
+                    ImGui::EndTooltip();
+                }
+            }
+
             ImGui::InputDouble("Total operating expenses", user_inputs.data() + 17);
+            if (ImGui::IsItemHovered()) {
+                if (ImGui::BeginTooltip()) {
+                    ImGui::Text("The expenses a business incurs through its normal business operations");
+                    ImGui::EndTooltip();
+                }
+            }
 
             ImGui::Spacing();
 
